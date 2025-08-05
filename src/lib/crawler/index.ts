@@ -582,8 +582,7 @@ export class EnhancedCrawlScheduler {
   }
 }
 
-// Export main classes
-export { TattooStudioCrawler, DirectoryCrawler, EnhancedCrawlScheduler }
+// Export main classes - classes are already exported with their declarations
 
 // Keep old scheduler for backward compatibility
 export class CrawlScheduler extends EnhancedCrawlScheduler {
