@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ink Finder
 
-## Getting Started
+タトゥーアーティストを検索・発見できるWebアプリケーション
 
-First, run the development server:
+## セットアップ手順
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Supabaseプロジェクトの作成
+
+1. [Supabase](https://supabase.com)にアクセスしてアカウントを作成
+2. 「New project」をクリック
+3. 以下の情報を入力：
+   - **Organization**: 既存の組織を選択または新規作成
+   - **Project name**: `ink-finder`
+   - **Database Password**: 強力なパスワードを生成（保存しておく）
+   - **Region**: `Northeast Asia (Tokyo)`
+4. 「Create new project」をクリック（プロジェクト作成に1-2分かかります）
+
+### 2. データベースのセットアップ
+
+プロジェクトが作成されたら：
+
+1. Supabaseダッシュボードの左メニューから「SQL Editor」をクリック
+2. 「New query」をクリック
+3. 以下のSQLファイルの内容を順番にコピー＆ペーストして実行：
+   - `/supabase/create_artists_table.sql`
+   - `/supabase/rls_policies.sql`
+   - `/supabase/create_indexes.sql`
+   - `/supabase/insert_sample_data.sql`
+
+各SQLを実行する際は、エディタに貼り付けて「Run」ボタンをクリック
+
+### 3. API認証情報の取得
+
+1. Supabaseダッシュボードの左メニューから「Settings」をクリック
+2. 「API」セクションをクリック
+3. 以下の情報をコピー：
+   - **Project URL**: `https://xxxxx.supabase.co`の形式
+   - **anon public** key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`で始まる長い文字列
+
+### 4. 環境変数の設定
+
+`.env.local`ファイルを開き、コピーした値で更新：
+
+```env
+# Supabase設定
+NEXT_PUBLIC_SUPABASE_URL=https://あなたのプロジェクトID.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=あなたのanon_public_key
+
+# Google Maps API（後で設定）
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 5. アプリケーションの起動
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 開発サーバーを再起動（Ctrl+Cで停止してから）：
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. ブラウザで http://localhost:3000 にアクセス
 
-## Learn More
+### トラブルシューティング
 
-To learn more about Next.js, take a look at the following resources:
+#### "Invalid URL"エラーが表示される場合
+- `.env.local`のURLが正しくコピーされているか確認
+- URLの最後に余分な`/`が入っていないか確認
+- 環境変数を変更後、必ず開発サーバーを再起動
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### データが表示されない場合
+- Supabaseダッシュボードの「Table Editor」で`artists`テーブルにデータが入っているか確認
+- ブラウザの開発者ツールでネットワークエラーを確認
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 機能
 
-## Deploy on Vercel
+- 🔍 アーティスト検索（名前、スタイル、キーワード）
+- 🎨 スタイルフィルター（複数選択可）
+- 💰 価格帯フィルター
+- 📍 地域フィルター
+- 👁️ ビューカウント自動更新
+- 📱 レスポンシブデザイン
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 技術スタック
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase（PostgreSQL）
+- Lucide React Icons
