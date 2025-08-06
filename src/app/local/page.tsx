@@ -708,22 +708,6 @@ export default function LocalPage() {
             >
               Home
             </Link>
-            <Link 
-              href="/admin" 
-              className="text-xs text-slate-600 hover:text-slate-800 underline"
-            >
-              Admin
-            </Link>
-            <button
-              onClick={() => {
-                localStorage.removeItem('ink-finder-artists')
-                localStorage.removeItem('ink-finder-studios')
-                window.location.reload()
-              }}
-              className="text-xs text-slate-600 hover:text-slate-800 underline"
-            >
-              Reset Data
-            </button>
           </div>
         </div>
       </footer>

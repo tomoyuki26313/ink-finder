@@ -417,21 +417,6 @@ export default function Home() {
             <p className="text-xs text-slate-700">
               © {new Date().getFullYear()} Ink Finder. All rights reserved.
             </p>
-            <a 
-              href="/admin" 
-              className="text-xs text-slate-600 hover:text-slate-600 underline"
-            >
-              Admin
-            </a>
-            <button
-              onClick={() => {
-                localStorage.removeItem('ink-finder-artists')
-                window.location.reload()
-              }}
-              className="text-xs text-slate-600 hover:text-slate-600 underline"
-            >
-              Reset Data
-            </button>
           </div>
         </div>
       </footer>
