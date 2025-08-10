@@ -62,7 +62,6 @@ export default function Home() {
     try {
       const { fetchStyles } = await import('@/lib/api/styles')
       const stylesData = await fetchStyles()
-      console.log('Loaded styles in main page:', stylesData)
       setStyles(stylesData)
     } catch (error) {
       console.error('Error loading styles:', error)
@@ -111,9 +110,6 @@ export default function Home() {
           }
           return { ...artist, studio } as ArtistWithStudio
         })
-        
-        console.log('Loaded artists with studios:', artistsWithStudios.length)
-        console.log('First artist data:', artistsWithStudios[0])
         setArtistsWithStudios(artistsWithStudios)
       }
     } catch (err) {
@@ -405,6 +401,7 @@ export default function Home() {
         <ArtistModal
           artist={selectedArtist}
           onClose={() => setSelectedArtist(null)}
+          availableStyles={styles}
         />
       )}
 

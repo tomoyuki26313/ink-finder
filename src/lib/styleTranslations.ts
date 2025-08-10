@@ -23,7 +23,10 @@ export const styleTranslations: { [key: string]: { en: string; ja: string } } = 
   'マンダラ': { en: 'Mandala', ja: 'マンダラ' },
   'セイクリッドジオメトリー': { en: 'Sacred Geometry', ja: 'セイクリッドジオメトリー' },
   'ボールドライン': { en: 'Bold Line', ja: 'ボールドライン' },
-  'チカーノ': { en: 'Chicano', ja: 'チカーノ' }
+  'チカーノ': { en: 'Chicano', ja: 'チカーノ' },
+  'カラータトゥー': { en: 'Color Tattoo', ja: 'カラータトゥー' },
+  '幾何学模様': { en: 'Geometric', ja: '幾何学模様' },
+  '水彩画': { en: 'Watercolor', ja: '水彩画' }
 }
 
 export function getStyleTranslation(style: string, language: Language): string {

@@ -690,6 +690,7 @@ export default function LocalPage() {
         <ArtistModal
           artist={selectedArtist}
           onClose={() => setSelectedArtist(null)}
+          availableStyles={availableStyles}
         />
       )}
 

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Test</title>
+</head>
+<body>
+    <h1>LocalStorage Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test data for artists and studios
+        const testArtists = [
+            {
+                id: 'test-1',
+                name_ja: 'テストアーティスト１',
+                name_en: 'Test Artist 1',
+                bio_ja: 'テストアーティストです',
+                bio_en: 'Test artist biography',
+                location: '東京都',
+                instagram_handle: 'test_artist_1',
+                instagram_posts: ['https://www.instagram.com/p/C-X5wWWP7Qd/'],
+                instagram_follower_count: 1000,
+                studio_id: 'studio-1',
+                style_ids: [1],
+                view_count: 5,
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'test-2',
+                name_ja: 'テストアーティスト２',
+                name_en: 'Test Artist 2',
+                bio_ja: '二番目のテストアーティストです',
+                bio_en: 'Second test artist biography',
+                location: '大阪府',
+                instagram_handle: 'test_artist_2',
+                instagram_posts: ['https://www.instagram.com/p/C-cOdFkSsXs/'],
+                instagram_follower_count: 2000,
+                studio_id: 'studio-2',
+                style_ids: [2],
+                view_count: 10,
+                created_at: new Date().toISOString()
+            }
+        ];
+
+        const testStudios = [
+            {
+                id: 'studio-1',
+                name_ja: 'テストスタジオ１',
+                name_en: 'Test Studio 1',
+                bio_ja: 'テストスタジオです',
+                bio_en: 'Test studio biography',
+                location: '東京都',
+                address_ja: '東京都渋谷区',
+                address_en: 'Shibuya, Tokyo',
+                instagram_handle: 'test_studio_1',
+                instagram_posts: [],
+                booking_url: 'https://example.com/booking',
+                view_count: 0,
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'studio-2',
+                name_ja: 'テストスタジオ２',
+                name_en: 'Test Studio 2',
+                bio_ja: '二番目のテストスタジオです',
+                bio_en: 'Second test studio biography',
+                location: '大阪府',
+                address_ja: '大阪府大阪市',
+                address_en: 'Osaka City, Osaka',
+                instagram_handle: 'test_studio_2',
+                instagram_posts: [],
+                booking_url: 'https://example.com/booking2',
+                view_count: 0,
+                created_at: new Date().toISOString()
+            }
+        ];
+
+        // Clear existing data first
+        localStorage.clear();
+        
+        // Save to localStorage
+        localStorage.setItem('ink-finder-artists', JSON.stringify(testArtists));
+        localStorage.setItem('ink-finder-studios', JSON.stringify(testStudios));
+        
+        console.log('Saved artists:', testArtists.length);
+        console.log('Saved studios:', testStudios.length);
+
+        // Check what was saved
+        const savedArtists = JSON.parse(localStorage.getItem('ink-finder-artists') || '[]');
+        const savedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]');
+
+        const results = document.getElementById('results');
+        results.innerHTML = `
+            <h2>Results:</h2>
+            <p><strong>Artists saved:</strong> ${savedArtists.length}</p>
+            <p><strong>Studios saved:</strong> ${savedStudios.length}</p>
+            <h3>Artists:</h3>
+            <ul>
+                ${savedArtists.map(a => `<li>${a.name_en} (${a.name_ja}) - Instagram: ${a.instagram_handle}</li>`).join('')}
+            </ul>
+            <h3>Studios:</h3>
+            <ul>
+                ${savedStudios.map(s => `<li>${s.name_en} (${s.name_ja}) - Location: ${s.location}</li>`).join('')}
+            </ul>
+            <p><a href="http://localhost:3000/en">Go to Ink Finder →</a></p>
+        `;
+    </script>
+</body>
+</html>

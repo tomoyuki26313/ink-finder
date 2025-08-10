@@ -953,8 +953,24 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles') && (
+            <button
+              onClick={handleAddNew}
+              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:block p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
           {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles') && (
@@ -968,7 +984,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Tab Navigation */}
+        {/* Desktop Tab Navigation */}
         <div className="flex space-x-1 mb-6">
           <button
             onClick={() => setActiveTab('artists')}
@@ -1038,6 +1054,8 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* Desktop Content Area */}
+        <div className="space-y-6">
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
@@ -1079,13 +1097,22 @@ export default function AdminPage() {
         {/* Artists Tab */}
         {activeTab === 'artists' && (
           <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
+            {/* Desktop Header */}
+            <div className="hidden lg:block p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
                 Artists ({artists.length})
               </h2>
             </div>
             
-            <div className="overflow-x-auto">
+            {/* Mobile Header */}
+            <div className="lg:hidden p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Artists ({artists.length})
+              </h2>
+            </div>
+            
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -1250,6 +1277,113 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden">
+              {sortedArtists.map((artist) => (
+                <div key={artist.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {artist.name || artist.name_en || 'No name'}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {artist.location || artist.name_ja || 'No location'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getStudioName(artist.studio_id)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => setPreviewArtist(artist)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditArtist(artist)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteArtist(artist.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Styles */}
+                  {(artist.style_ids || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {(artist.style_ids || []).slice(0, 3).map((styleId, index) => {
+                        const style = styles.find(s => s.id === styleId)
+                        const styleName = style ? style.style_name_ja : `Style ${styleId}`
+                        return (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                          >
+                            {styleName}
+                          </span>
+                        )
+                      })}
+                      {(artist.style_ids || []).length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          +{(artist.style_ids || []).length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Images */}
+                  {(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {(artist.instagram_posts || artist.images || [])
+                        .filter(img => img && img.trim() !== '')
+                        .slice(0, 3)
+                        .map((imgUrl, index) => (
+                        <div 
+                          key={index}
+                          className="w-16 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded flex-shrink-0 border border-gray-300 overflow-hidden"
+                        >
+                          <InstagramEmbed 
+                            postUrl={imgUrl}
+                            className="w-full h-full object-cover"
+                            compact={true}
+                          />
+                        </div>
+                      ))}
+                      {(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length > 3 && (
+                        <div className="w-16 h-20 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
+                          <span className="text-xs text-gray-600">
+                            +{(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Instagram Handle */}
+                  {artist.instagram_handle && (
+                    <div className="mt-2">
+                      <span className="text-xs text-gray-600">Instagram: </span>
+                      <a 
+                        href={`https://instagram.com/${artist.instagram_handle.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        @{artist.instagram_handle.replace('@', '')}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -1617,6 +1751,78 @@ export default function AdminPage() {
             />
           </div>
         )}
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-30">
+        <div className="flex justify-around">
+          <button
+            onClick={() => setActiveTab('artists')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'artists'
+                ? 'text-blue-600'
+                : 'text-gray-500'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-xs">Artists</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('studios')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'studios'
+                ? 'text-blue-600'
+                : 'text-gray-500'
+            }`}
+          >
+            <Building2 className="w-5 h-5" />
+            <span className="text-xs">Studios</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('styles')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'styles'
+                ? 'text-blue-600'
+                : 'text-gray-500'
+            }`}
+          >
+            <Palette className="w-5 h-5" />
+            <span className="text-xs">Styles</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('crawling')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'crawling'
+                ? 'text-blue-600'
+                : 'text-gray-500'
+            }`}
+          >
+            <Globe className="w-5 h-5" />
+            <span className="text-xs">Crawling</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('review')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'review'
+                ? 'text-blue-600 relative'
+                : 'text-gray-500'
+            }`}
+          >
+            <Clock className="w-5 h-5" />
+            <span className="text-xs">Review</span>
+            {pendingArtists.length > 0 && (
+              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingArtists.length}
+              </div>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Main Content Area */}
+      <div className="lg:hidden p-4">
+        {/* All content from artists tab onwards will be duplicated here for mobile */}
       </div>
     </div>
   )

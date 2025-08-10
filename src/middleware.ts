@@ -4,12 +4,7 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Check if the pathname is missing a locale
-  const pathnameIsMissingLocale = ['en', 'ja'].every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  )
-
-  // Skip middleware for API routes, static files, and special Next.js routes
+  // Skip middleware for API routes, static files, admin, local, and special Next.js routes
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
@@ -20,6 +15,11 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next()
   }
+
+  // Check if the pathname is missing a locale
+  const pathnameIsMissingLocale = ['en', 'ja'].every(
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+  )
 
   // Redirect if there is no locale
   if (pathnameIsMissingLocale) {

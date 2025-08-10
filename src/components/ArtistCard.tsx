@@ -1,6 +1,6 @@
 'use client'
 
-import { MapPin, Eye, Instagram, ChevronLeft, ChevronRight, Building2 } from 'lucide-react'
+import { MapPin, ChevronLeft, ChevronRight, Building2 } from 'lucide-react'
 import { useState, useEffect, memo } from 'react'
 import { ArtistWithStudio, Style } from '@/types/database'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -38,7 +38,6 @@ const formatFollowerCount = (count: number, language: string): string => {
 const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles = [], selectedStyles = [] }: ArtistCardProps) {
   const { language, t } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   
   // Filter out empty Instagram posts - handle both old and new structure
   const allInstagramPosts = (artist.instagram_posts || artist.images || []).filter(post => post && post.trim() !== '')
@@ -162,33 +161,7 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
   const displayStyles = getDisplayStyles()
   
 
-  // Preload next images for smooth navigation
-  useEffect(() => {
-    if (validInstagramPosts.length <= 1) return
-    
-    const preloadNext = () => {
-      const nextIndex = (currentImageIndex + 1) % validInstagramPosts.length
-      const nextUrl = validInstagramPosts[nextIndex]
-      
-      if (nextUrl && !preloadedImages.has(nextUrl)) {
-        // Create iframe to preload
-        const iframe = document.createElement('iframe')
-        iframe.src = `https://www.instagram.com/p/${nextUrl.match(/\/p\/([A-Za-z0-9_-]+)/)?.[1]}/embed/captioned/`
-        iframe.style.display = 'none'
-        iframe.onload = () => {
-          setPreloadedImages(prev => new Set([...prev, nextUrl]))
-          document.body.removeChild(iframe)
-        }
-        iframe.onerror = () => {
-          document.body.removeChild(iframe)
-        }
-        document.body.appendChild(iframe)
-      }
-    }
-    
-    const timer = setTimeout(preloadNext, 1000) // Preload after 1 second
-    return () => clearTimeout(timer)
-  }, [currentImageIndex, validInstagramPosts, preloadedImages])
+  // Note: Instagram preloading removed due to X-Frame-Options restrictions
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -205,6 +178,58 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
       className="group bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:border-purple-200 transition-all duration-300"
       style={{ willChange: 'transform', contain: 'layout style paint' }}
     >
+      {/* Artist Information Section - Moved to Top */}
+      <div className="p-5">
+        {/* Name and Location on same line */}
+        <div className="flex items-center justify-between mb-2">
+          <h3 
+            className="font-semibold text-slate-900 text-lg cursor-pointer hover:text-purple-600 transition-colors"
+            onClick={onClick}
+          >
+            {artist.name || getLocalizedField(artist, 'name', language)}
+          </h3>
+          <div className="flex items-center gap-1 text-sm text-slate-600">
+            <MapPin className="w-4 h-4" />
+            <span>{getPrefectureTranslation(artist.location || artist.studio?.location || '不明', language)}</span>
+          </div>
+        </div>
+        
+        {/* Styles below the name */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {displayStyles.slice(0, 3).map((style, index) => (
+            <span
+              key={index}
+              className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium"
+            >
+              {style}
+            </span>
+          ))}
+          {displayStyles.length > 3 && (
+            <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded-full">
+              +{displayStyles.length - 3}
+            </span>
+          )}
+        </div>
+        
+        {/* Studio information if available */}
+        {(() => {
+          if (!artist.studio) return null
+          const studioName = language === 'ja' ? artist.studio.name_ja : artist.studio.name_en
+          if (!studioName) return null
+          if (studioName === '不明' || studioName === 'Unknown') return null
+          if (studioName === '1' || studioName === 'Studio 1') return null
+          if (studioName.toLowerCase() === 'studio' || studioName.toLowerCase() === 'no studio') return null
+          
+          return (
+            <div className="flex items-center gap-1 text-xs text-slate-500 mt-2">
+              <Building2 className="w-3 h-3" />
+              <span>{studioName}</span>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Instagram Image Section - Moved to Bottom */}
       <div className="relative h-80 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
         {validInstagramPosts.length > 0 ? (
           <div className="w-full h-full relative overflow-hidden">
@@ -272,79 +297,6 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
           </div>
         )}
         
-      </div>
-
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-1">
-          <h3 
-            className="font-semibold text-slate-900 text-lg cursor-pointer hover:text-purple-600 transition-colors"
-            onClick={onClick}
-          >
-            {artist.name || getLocalizedField(artist, 'name', language)}
-          </h3>
-          <div className="text-right">
-            <a
-              href={`https://instagram.com/${artist.instagram_handle.replace('@', '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-pink-600 hover:text-pink-700 transition-colors text-xs"
-            >
-              <Instagram className="w-3 h-3" />
-              <span className="font-medium">
-                @{artist.instagram_handle.replace('@', '')}
-              </span>
-            </a>
-            {artist.instagram_follower_count && artist.instagram_follower_count > 0 && (
-              <div className="text-xs text-slate-700 mt-0.5">
-                {formatFollowerCount(artist.instagram_follower_count, language)} followers
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 mb-3">
-          {(() => {
-            if (!artist.studio) return null
-            const studioName = language === 'ja' ? artist.studio.name_ja : artist.studio.name_en
-            if (!studioName) return null
-            if (studioName === '不明' || studioName === 'Unknown') return null
-            if (studioName === '1' || studioName === 'Studio 1') return null
-            if (studioName.toLowerCase() === 'studio' || studioName.toLowerCase() === 'no studio') return null
-            
-            return (
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <Building2 className="w-3 h-3" />
-                <span>{studioName}</span>
-              </div>
-            )
-          })()}
-          <div className="flex items-center gap-1 text-xs text-slate-600">
-            <MapPin className="w-3 h-3" />
-            <span>{getPrefectureTranslation(artist.location || artist.studio?.location || '不明', language)}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-medium text-slate-700">
-              {t('styleLabel')}
-            </span>
-            {displayStyles.slice(0, 2).map((style, index) => (
-              <span
-                key={index}
-                className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium"
-              >
-                {style}
-              </span>
-            ))}
-            {displayStyles.length > 2 && (
-              <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded-full">
-                +{displayStyles.length - 2}
-              </span>
-            )}
-          </div>
-        </div>
-
       </div>
     </div>
   )

@@ -194,30 +194,22 @@ export async function fetchArtists(): Promise<Artist[]> {
 
 // Fetch artists with their studio information
 export async function fetchArtistsWithStudios(): Promise<ArtistWithStudio[]> {
-  console.log('🔍 fetchArtistsWithStudios - isSupabaseConfigured:', isSupabaseConfigured)
-  
   if (!isSupabaseConfigured) {
-    console.log('📝 Using stored data')
     await delay(500)
     const storedArtists = getStoredArtists()
     const storedStudios = typeof window !== 'undefined' 
       ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
       : []
+    
     const artistsWithStudios = storedArtists.map(artist => {
       const studio = storedStudios.find((s: Studio) => s.id === artist.studio_id)
-      if (!studio) {
-        console.error(`Studio not found for artist ${artist.name_en}`)
-        return null
-      }
+      if (!studio) return null
       return { ...artist, studio } as ArtistWithStudio
     }).filter(Boolean) as ArtistWithStudio[]
     
     return artistsWithStudios.sort((a, b) => b.view_count - a.view_count)
   }
 
-  console.log('📡 Fetching from Supabase...')
-  console.log('Supabase instance:', !!supabase)
-  
   const { data, error } = await supabase!
     .from('artists')
     .select(`
@@ -234,67 +226,11 @@ export async function fetchArtistsWithStudios(): Promise<ArtistWithStudio[]> {
     .order('view_count', { ascending: false })
   
   if (error) {
-    console.error('Error fetching artists from Supabase:', error)
-    console.error('Error details:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    })
+    console.error('Error fetching artists with studios:', error)
     return []
   }
   
-  console.log(`✅ Fetched ${data.length} artists from Supabase`)
-  console.log('Raw data:', data)
-  
-  if (data && data.length > 0) {
-    data.forEach(artist => {
-      console.log(`- ${artist.name} (${artist.instagram_handle})`)
-      console.log(`  Studio:`, artist.studio)
-      console.log(`  Artist styles:`, artist.artist_styles)
-    })
-  }
-  
-  // Check why studios are null
-  console.log('Artists with studio data:')
-  data.forEach(artist => {
-    console.log(`${artist.name}: studio_id=${artist.studio_id}, studio=${artist.studio}`)
-  })
-  
-  // Temporarily allow artists without studios to be displayed
-  const artistsWithStudios = data
-    .map(artist => {
-      // Create a default studio if none exists
-      const defaultStudio = {
-        id: 1,
-        name_ja: 'Studio 1',
-        name_en: 'Studio 1',
-        location: '東京都',
-        address_ja: '',
-        address_en: '',
-        view_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      return {
-        ...artist,
-        studio: artist.studio || defaultStudio,
-        studio_id: artist.studio_id || 1
-      }
-    })
-    .map(artist => {
-      // Extract style names from the artist_styles relationship
-      const currentStyles = artist.artist_styles?.map((as: any) => as.style?.style_name_ja).filter(Boolean) || []
-      
-      return {
-        ...artist,
-        studio: artist.studio,
-        style_ids: artist.style_ids || [] // Ensure style_ids is always an array
-      }
-    }) as ArtistWithStudio[]
-  
-  return artistsWithStudios
+  return data as ArtistWithStudio[]
 }
 
 export async function fetchArtistById(id: string): Promise<Artist | null> {

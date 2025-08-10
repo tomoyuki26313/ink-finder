@@ -2,7 +2,7 @@
 
 import { X, MapPin, Instagram, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ArtistWithStudio } from '@/types/database'
+import { ArtistWithStudio, Style } from '@/types/database'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
 import { getStyleTranslation } from '@/lib/styleTranslations'
@@ -13,25 +13,59 @@ import InstagramEmbed from './InstagramEmbed'
 interface ArtistModalProps {
   artist: ArtistWithStudio
   onClose: () => void
+  availableStyles?: Style[]
 }
 
-export default function ArtistModal({ artist, onClose }: ArtistModalProps) {
+export default function ArtistModal({ artist, onClose, availableStyles = [] }: ArtistModalProps) {
   const { t, language } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  
+  const [styles, setStyles] = useState<Style[]>(availableStyles)
+
+  // Load styles if not provided
+  useEffect(() => {
+    if (availableStyles.length === 0) {
+      const loadStyles = async () => {
+        try {
+          const { fetchStyles } = await import('@/lib/api/styles')
+          const fetchedStyles = await fetchStyles()
+          setStyles(fetchedStyles)
+        } catch (error) {
+          console.error('Error loading styles:', error)
+        }
+      }
+      loadStyles()
+    }
+  }, [availableStyles])
 
   // Handle both instagram_posts and images arrays, with fallback to empty array
   const postImages = artist.instagram_posts || artist.images || []
   
-  // Get display styles (prioritize image-based styles if available, fallback to legacy styles)
+  // Get display styles with proper priority: style_ids > image_styles > legacy styles
   const getDisplayStyles = () => {
-    if (artist.image_styles && artist.image_styles.length > 0) {
-      // Get unique style IDs from all images
-      const allStyleIds = getAllStylesFromImages(artist)
-      // Convert to style names (this would require access to available styles from the database)
-      // For now, return the legacy styles as fallback
-      return artist.styles || []
+    // Priority 1: Use style_ids if available
+    if (artist.style_ids && artist.style_ids.length > 0) {
+      return artist.style_ids.map(styleId => {
+        const style = styles.find(s => s.id === styleId)
+        if (style) {
+          return language === 'ja' ? style.style_name_ja : style.style_name_en
+        }
+        return `Style ${styleId}` // Fallback if style not found
+      }).filter(Boolean)
     }
+    
+    // Priority 2: Use image_styles if available
+    if (artist.image_styles && artist.image_styles.length > 0) {
+      const allStyleIds = getAllStylesFromImages(artist)
+      return allStyleIds.map(styleId => {
+        const style = styles.find(s => s.id === styleId)
+        if (style) {
+          return language === 'ja' ? style.style_name_ja : style.style_name_en
+        }
+        return `Style ${styleId}` // Fallback if style not found
+      }).filter(Boolean)
+    }
+    
+    // Priority 3: Legacy styles field
     return artist.styles || []
   }
   
@@ -67,7 +101,7 @@ export default function ArtistModal({ artist, onClose }: ArtistModalProps) {
     }
   }
 
-  // Handle Escape key to close modal
+  // Handle Escape key to close modal and process Instagram embeds
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -76,8 +110,19 @@ export default function ArtistModal({ artist, onClose }: ArtistModalProps) {
     }
 
     document.addEventListener('keydown', handleEscapeKey)
-    return () => document.removeEventListener('keydown', handleEscapeKey)
-  }, [onClose])
+    
+    // Force Instagram embeds to process when modal opens
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined' && window.instgrm) {
+        window.instgrm.Embeds.process()
+      }
+    }, 500)
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey)
+      clearTimeout(timer)
+    }
+  }, [onClose, currentImageIndex])
 
   return (
     <div 
@@ -178,19 +223,21 @@ export default function ArtistModal({ artist, onClose }: ArtistModalProps) {
                 </div>
 
                 {/* Styles */}
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-2">{t('styles')}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {displayStyles.map((style, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
-                      >
-                        {getStyleTranslation(style, language)}
-                      </span>
-                    ))}
+                {displayStyles.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">{t('styles')}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {displayStyles.map((style, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                        >
+                          {style}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
 
                 {/* Artist Features */}

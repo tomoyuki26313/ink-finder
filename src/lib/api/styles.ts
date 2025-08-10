@@ -17,6 +17,10 @@ const mockStyles: Style[] = [
   { id: 9, style_name_ja: 'ニュースクール', style_name_en: 'New School', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
   { id: 10, style_name_ja: '幾何学模様', style_name_en: 'Geometric', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
   { id: 11, style_name_ja: 'チカーノ', style_name_en: 'Chicano', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
+  { id: 12, style_name_ja: 'カラータトゥー', style_name_en: 'Color Tattoo', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
+  { id: 13, style_name_ja: 'ブラック＆グレー', style_name_en: 'Black & Grey', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
+  { id: 14, style_name_ja: 'ポートレート', style_name_en: 'Portrait', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
+  { id: 15, style_name_ja: 'ミニマル', style_name_en: 'Minimal', created_at: '2025-01-30T00:00:00Z', updated_at: '2025-01-30T00:00:00Z' },
 ]
 
 // Style API functions
