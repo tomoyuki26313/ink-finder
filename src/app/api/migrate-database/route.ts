@@ -72,6 +72,12 @@ export async function POST(request: NextRequest) {
               ALTER TABLE public.artists ADD COLUMN image_styles JSONB DEFAULT '[]'::jsonb;
           END IF;
           
+          -- Add image_motifs column for per-image motif tagging
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                         WHERE table_name = 'artists' AND column_name = 'image_motifs') THEN
+              ALTER TABLE public.artists ADD COLUMN image_motifs JSONB DEFAULT '[]'::jsonb;
+          END IF;
+          
           -- Update existing artists to populate multilingual fields from legacy fields
           UPDATE public.artists 
           SET 
@@ -91,12 +97,76 @@ export async function POST(request: NextRequest) {
       CREATE INDEX IF NOT EXISTS idx_artists_custom_design_allowed ON public.artists(custom_design_allowed) WHERE custom_design_allowed = true;
       CREATE INDEX IF NOT EXISTS idx_artists_cover_up_available ON public.artists(cover_up_available) WHERE cover_up_available = true;
       CREATE INDEX IF NOT EXISTS idx_artists_image_styles ON public.artists USING gin(image_styles);
+      CREATE INDEX IF NOT EXISTS idx_artists_image_motifs ON public.artists USING gin(image_motifs);
+
+      -- Create motifs table if it doesn't exist
+      CREATE TABLE IF NOT EXISTS public.motifs (
+        id SERIAL PRIMARY KEY,
+        motif_name_ja VARCHAR(255) NOT NULL UNIQUE,
+        motif_name_en VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Enable RLS on motifs table
+      ALTER TABLE public.motifs ENABLE ROW LEVEL SECURITY;
+
+      -- Create policies for motifs table
+      DO $$ 
+      BEGIN
+        -- Drop existing policies if they exist
+        DROP POLICY IF EXISTS "Allow public read access on motifs" ON public.motifs;
+        DROP POLICY IF EXISTS "Allow all operations on motifs" ON public.motifs;
+        
+        -- Create new policies
+        CREATE POLICY "Allow public read access on motifs" ON public.motifs FOR SELECT USING (true);
+        CREATE POLICY "Allow all operations on motifs" ON public.motifs FOR ALL USING (true) WITH CHECK (true);
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+
+      -- Insert initial motifs data (only if table is empty)
+      INSERT INTO public.motifs (motif_name_ja, motif_name_en) 
+      SELECT * FROM (VALUES
+        ('龍', 'Dragon'),
+        ('虎', 'Tiger'),
+        ('鯉', 'Koi'),
+        ('桜', 'Cherry Blossom'),
+        ('菊', 'Chrysanthemum'),
+        ('牡丹', 'Peony'),
+        ('蓮', 'Lotus'),
+        ('鳳凰', 'Phoenix'),
+        ('般若', 'Hannya'),
+        ('髑髏', 'Skull'),
+        ('蛇', 'Snake'),
+        ('鷹', 'Eagle'),
+        ('狼', 'Wolf'),
+        ('獅子', 'Lion'),
+        ('薔薇', 'Rose'),
+        ('蝶', 'Butterfly'),
+        ('観音', 'Kannon'),
+        ('不動明王', 'Fudo Myoo'),
+        ('鬼', 'Oni'),
+        ('侍', 'Samurai'),
+        ('芸者', 'Geisha'),
+        ('波', 'Wave'),
+        ('雲', 'Cloud'),
+        ('風神雷神', 'Fujin Raijin'),
+        ('達磨', 'Daruma'),
+        ('招き猫', 'Maneki Neko'),
+        ('狐', 'Fox'),
+        ('亀', 'Turtle'),
+        ('蜘蛛', 'Spider'),
+        ('竹', 'Bamboo')
+      ) AS v(motif_name_ja, motif_name_en)
+      WHERE NOT EXISTS (SELECT 1 FROM public.motifs LIMIT 1)
+      ON CONFLICT (motif_name_ja) DO NOTHING;
     `
 
     // Check if all columns exist by trying to select them from artists table
     const { data: testData, error: testError } = await supabase
       .from('artists')
-      .select('name_ja, name_en, bio_ja, bio_en, address_ja, address_en, female_artist, beginner_friendly, custom_design_allowed, cover_up_available, image_styles')
+      .select('name_ja, name_en, bio_ja, bio_en, address_ja, address_en, female_artist, beginner_friendly, custom_design_allowed, cover_up_available, image_styles, image_motifs')
       .limit(1)
     
     if (!testError) {
@@ -110,7 +180,7 @@ export async function POST(request: NextRequest) {
     // If there's an error, determine which columns are missing based on the error message
     const missingColumns = [
       'name_ja', 'name_en', 'bio_ja', 'bio_en', 'address_ja', 'address_en',
-      'female_artist', 'beginner_friendly', 'custom_design_allowed', 'cover_up_available', 'image_styles'
+      'female_artist', 'beginner_friendly', 'custom_design_allowed', 'cover_up_available', 'image_styles', 'image_motifs'
     ]
 
     if (missingColumns.length === 0) {

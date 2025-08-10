@@ -77,6 +77,7 @@ export interface Artist {
   website_url?: string;
   portfolio_images: string[];        // High-quality images from website
   image_styles?: ImageStyle[];       // Style information for each image
+  image_motifs?: ImageMotif[];       // Motif information for each image
   pricing_info: PricingInfo;
   contact_info: ContactInfo;
   
@@ -114,6 +115,19 @@ export interface Style {
   style_name_en: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Motif {
+  id: number;
+  motif_name_ja: string;
+  motif_name_en: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ImageMotif {
+  image_url: string;
+  motif_ids: number[];
 }
 
 export interface ImageStyle {

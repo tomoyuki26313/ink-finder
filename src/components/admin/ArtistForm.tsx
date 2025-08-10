@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { X, Plus, Trash2, Languages, Tag, ChevronUp, ChevronDown } from 'lucide-react'
-import { Artist, Studio, Style, ImageStyle } from '@/types/database'
+import { Artist, Studio, Style, ImageStyle, Motif, ImageMotif } from '@/types/database'
 import InstagramUrlValidator from './InstagramUrlValidator'
 import { getStylesForImage, updateImageStyles, updateArtistStylesFromImages, getAllStylesFromImages } from '@/lib/imageStyles'
+import { getMotifIdsForImage, updateImageMotifs, getAllMotifsFromImages } from '@/lib/imageMotifs'
 
 interface ArtistFormProps {
   artist?: Artist | null
@@ -67,7 +68,9 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
   const [imageUrlValidations, setImageUrlValidations] = useState<boolean[]>([true, true, true])
   const [lastArtistId, setLastArtistId] = useState<string | undefined>(artist?.id)
   const [availableStyles, setAvailableStyles] = useState<Style[]>([])
+  const [availableMotifs, setAvailableMotifs] = useState<Motif[]>([])
   const [imageStyles, setImageStyles] = useState<ImageStyle[]>([])
+  const [imageMotifs, setImageMotifs] = useState<ImageMotif[]>([])
   const [showImageStyleModal, setShowImageStyleModal] = useState<number | null>(null)
   const [followerInputValue, setFollowerInputValue] = useState<string>('')
   
@@ -129,23 +132,35 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
     }
   }, [])
   
-  // Load styles from database
+  // Load styles and motifs from database
   useEffect(() => {
-    const loadStyles = async () => {
+    const loadStylesAndMotifs = async () => {
       try {
         const { fetchStyles } = await import('@/lib/api/styles')
-        const styles = await fetchStyles()
-        setAvailableStyles(styles)
+        const { fetchMotifs } = await import('@/lib/api/motifs')
         
-        // Load image styles if they exist
-        if (artist && artist.image_styles) {
-          setImageStyles(artist.image_styles)
+        const [styles, motifs] = await Promise.all([
+          fetchStyles(),
+          fetchMotifs()
+        ])
+        
+        setAvailableStyles(styles)
+        setAvailableMotifs(motifs)
+        
+        // Load image styles and motifs if they exist
+        if (artist) {
+          if (artist.image_styles) {
+            setImageStyles(artist.image_styles)
+          }
+          if (artist.image_motifs) {
+            setImageMotifs(artist.image_motifs)
+          }
         }
       } catch (error) {
-        console.error('Error loading styles:', error)
+        console.error('Error loading styles and motifs:', error)
       }
     }
-    loadStyles()
+    loadStylesAndMotifs()
   }, [artist])
 
   useEffect(() => {
@@ -189,6 +204,9 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       images: formData.images.filter(img => img.trim() !== ''),
       image_styles: imageStyles.filter(imgStyle => 
         formData.images.some(img => img.trim() !== '' && img === imgStyle.image_url)
+      ),
+      image_motifs: imageMotifs.filter(imgMotif => 
+        formData.images.some(img => img.trim() !== '' && img === imgMotif.image_url)
       )
     }
     
@@ -229,6 +247,39 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       : [...currentStyleIds, styleId]
     
     updateImageStylesForImage(imageUrl, newStyleIds)
+  }
+
+  // Motif helper functions
+  const getImageMotifIds = (imageUrl: string): number[] => {
+    const imageMotif = imageMotifs.find(img => img.image_url === imageUrl)
+    return imageMotif?.motif_ids || []
+  }
+
+  const updateImageMotifsForImage = (imageUrl: string, motifIds: number[]) => {
+    setImageMotifs(prev => {
+      const existingIndex = prev.findIndex(img => img.image_url === imageUrl)
+      const newImageMotif: ImageMotif = {
+        image_url: imageUrl,
+        motif_ids: motifIds
+      }
+      
+      if (existingIndex >= 0) {
+        const updated = [...prev]
+        updated[existingIndex] = newImageMotif
+        return updated
+      } else {
+        return [...prev, newImageMotif]
+      }
+    })
+  }
+
+  const toggleImageMotifSelection = (imageUrl: string, motifId: number) => {
+    const currentMotifIds = getImageMotifIds(imageUrl)
+    const newMotifIds = currentMotifIds.includes(motifId)
+      ? currentMotifIds.filter(id => id !== motifId)
+      : [...currentMotifIds, motifId]
+    
+    updateImageMotifsForImage(imageUrl, newMotifIds)
   }
 
   const updateImage = (index: number, value: string) => {
@@ -660,6 +711,43 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
                         </div>
                         <div className="mt-1 text-xs text-gray-700">
                           Selected: {getImageStyleIds(postUrl).length} style{getImageStyleIds(postUrl).length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Motif tags for this image */}
+                    {postUrl && postUrl.trim() !== '' && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Tag className="inline w-4 h-4 mr-1" />
+                          Motifs for this image
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto p-2 border border-gray-100 rounded bg-blue-50">
+                          {availableMotifs.map(motif => {
+                            const imageMotifIds = getImageMotifIds(postUrl)
+                            const isSelected = imageMotifIds.includes(motif.id)
+                            
+                            return (
+                              <label
+                                key={motif.id}
+                                className="flex items-center gap-1 cursor-pointer hover:bg-blue-100 p-1 rounded text-xs"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleImageMotifSelection(postUrl, motif.id)}
+                                  className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="font-medium text-gray-900">{motif.motif_name_ja}</div>
+                                  <div className="text-xs text-gray-700">{motif.motif_name_en}</div>
+                                </div>
+                              </label>
+                            )
+                          })}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-700">
+                          Selected: {getImageMotifIds(postUrl).length} motif{getImageMotifIds(postUrl).length !== 1 ? 's' : ''}
                         </div>
                       </div>
                     )}
