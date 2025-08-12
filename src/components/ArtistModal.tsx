@@ -169,7 +169,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
         <div className="relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
+            className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
             title={t('close')}
           >
             <X className="w-5 h-5 text-slate-800" />
@@ -180,12 +180,12 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
               {validImages.length > 0 ? (
                 <>
                   <div className="relative w-full h-full">
-                    <div className="absolute inset-0 overflow-y-auto p-4">
-                      <div className="w-full max-w-md mx-auto">
+                    <div className="absolute inset-0 overflow-hidden p-4">
+                      <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
                         <InstagramEmbed 
                           key={validImages[currentImageIndex]} 
                           postUrl={validImages[currentImageIndex]} 
-                          className="w-full"
+                          className="w-full max-h-full"
                           priority={true}
                           compact={false}
                         />
@@ -198,7 +198,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                     <>
                       <button
                         onClick={handlePrevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-10"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-40"
                         aria-label="Previous image"
                       >
                         <ChevronLeft className="w-6 h-6 text-slate-700" />
@@ -206,14 +206,14 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                       
                       <button
                         onClick={handleNextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-10"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-40"
                         aria-label="Next image"
                       >
                         <ChevronRight className="w-6 h-6 text-slate-700" />
                       </button>
                       
                       {/* Page indicator */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-40">
                         {validImages.map((_, index) => (
                           <button
                             key={index}
