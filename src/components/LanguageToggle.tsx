@@ -18,14 +18,15 @@ export default function LanguageToggle() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-sm font-medium text-slate-800"
+        className="flex items-center gap-2 p-2 hover:bg-slate-100 rounded-full transition-colors text-sm font-medium text-slate-800"
         title={t('language')}
       >
-        <img src="/global.png" alt="Language" className="w-4 h-4" />
-        <span>
+        <img src="/global.png" alt="Language" className="w-5 h-5" />
+        {/* Hide text on mobile, show on desktop */}
+        <span className="hidden md:inline">
           {language === 'en' ? 'English' : '日本語'}
         </span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 transition-transform hidden md:block ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
