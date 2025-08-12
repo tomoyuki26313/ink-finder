@@ -422,7 +422,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={() => setItemsPerPage(prev => Math.min(prev + 30, filteredArtists.length))}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    className="px-6 py-2 bg-white text-black border border-black rounded-lg hover:bg-black hover:text-white transition-colors"
                   >
                     もっと見る
                   </button>

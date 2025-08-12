@@ -278,7 +278,7 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
           {displayStyles.slice(0, 2).map((style, index) => (
             <span
               key={index}
-              className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium"
+              className="text-xs px-2 py-1 bg-white text-black border border-black rounded-full font-medium"
             >
               {style}
             </span>
@@ -296,7 +296,7 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
             {displayMotifs.slice(0, 2).map((motif, index) => (
               <span
                 key={index}
-                className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium"
+                className="text-xs px-2 py-1 bg-white text-black border border-black rounded-full font-medium"
               >
                 {motif}
               </span>

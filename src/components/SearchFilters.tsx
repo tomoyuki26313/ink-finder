@@ -350,11 +350,11 @@ const SearchFilters = memo(function SearchFilters({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-800">{t('filters')}</h3>
+        <h3 className="text-lg font-semibold text-slate-800">SEARCH</h3>
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+            className="text-sm text-black hover:text-gray-700 font-medium flex items-center gap-1"
           >
             <X className="w-4 h-4" />
             {t('clearAll')}
@@ -367,7 +367,7 @@ const SearchFilters = memo(function SearchFilters({
           <div className="flex items-center gap-2 mb-3">
             <h4 className="font-bold text-slate-800">{t('style')}</h4>
             {selectedStyles.length > 0 && (
-              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-gray-100 text-black px-2 py-0.5 rounded-full">
                 {selectedStyles.length} {t('selected')}
               </span>
             )}
@@ -381,8 +381,8 @@ const SearchFilters = memo(function SearchFilters({
                     onClick={() => toggleStyle(styleInfo.displayName)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       selectedStyles.includes(styleInfo.displayName)
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-black text-white border border-black'
+                        : 'bg-white text-black border border-black hover:bg-gray-50'
                     }`}
                   >
                     {styleInfo.displayName}
@@ -395,7 +395,7 @@ const SearchFilters = memo(function SearchFilters({
             {styles.length > 6 && (
               <button
                 onClick={() => setShowAllStyles(!showAllStyles)}
-                className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                className="text-sm text-black hover:text-gray-700 font-medium"
               >
                 {showAllStyles ? t('showLess') : `${t('showMore')} (${styles.length - 6})`}
               </button>
@@ -407,7 +407,7 @@ const SearchFilters = memo(function SearchFilters({
           <div className="flex items-center gap-2 mb-3">
             <h4 className="font-bold text-slate-800">{language === 'ja' ? 'デザイン' : 'Motifs'}</h4>
             {selectedMotifs.length > 0 && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-gray-100 text-black px-2 py-0.5 rounded-full">
                 {selectedMotifs.length} {t('selected')}
               </span>
             )}
@@ -421,8 +421,8 @@ const SearchFilters = memo(function SearchFilters({
                     onClick={() => toggleMotif(motifInfo.displayName)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       selectedMotifs.includes(motifInfo.displayName)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-black text-white border border-black'
+                        : 'bg-white text-black border border-black hover:bg-gray-50'
                     }`}
                   >
                     {motifInfo.displayName}
@@ -435,7 +435,7 @@ const SearchFilters = memo(function SearchFilters({
             {motifs.length > 6 && (
               <button
                 onClick={() => setShowAllMotifs(!showAllMotifs)}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-black hover:text-gray-700 font-medium"
               >
                 {showAllMotifs ? t('showLess') : `${t('showMore')} (${motifs.length - 6})`}
               </button>
@@ -447,7 +447,7 @@ const SearchFilters = memo(function SearchFilters({
           <div className="flex items-center gap-2 mb-3">
             <h4 className="font-bold text-slate-800">{t('location')}</h4>
             {selectedLocation.length > 0 && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-gray-100 text-black px-2 py-0.5 rounded-full">
                 {selectedLocation.length} {t('selected')}
               </span>
             )}
@@ -459,8 +459,8 @@ const SearchFilters = memo(function SearchFilters({
                 onClick={() => toggleLocation(prefecture)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedLocation.includes(prefecture)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-black text-white border border-black'
+                    : 'bg-white text-black border border-black hover:bg-gray-50'
                 }`}
               >
                 {getPrefectureTranslation(prefecture, language)}

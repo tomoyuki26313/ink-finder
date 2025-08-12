@@ -266,7 +266,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                       {displayStyles.map((style, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                          className="px-3 py-1.5 bg-white text-black border border-black rounded-full text-sm font-medium"
                         >
                           {style}
                         </span>
@@ -283,7 +283,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                       {displayMotifs.map((motif, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                          className="px-3 py-1.5 bg-white text-black border border-black rounded-full text-sm font-medium"
                         >
                           {motif}
                         </span>
