@@ -1,7 +1,7 @@
 'use client'
 
 import { X, MapPin, Instagram, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { ArtistWithStudio, Style, Motif } from '@/types/database'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
@@ -23,6 +23,8 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [styles, setStyles] = useState<Style[]>(availableStyles)
   const [motifs, setMotifs] = useState<Motif[]>(availableMotifs)
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
 
   // Load styles and motifs if not provided
   useEffect(() => {
@@ -137,6 +139,32 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
     }
   }
 
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+    
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe && validImages.length > 1) {
+      // Swipe left -> next image
+      setCurrentImageIndex((prev) => (prev + 1) % validImages.length)
+    }
+    if (isRightSwipe && validImages.length > 1) {
+      // Swipe right -> previous image
+      setCurrentImageIndex((prev) => (prev - 1 + validImages.length) % validImages.length)
+    }
+  }
+
   // Handle Escape key to close modal and process Instagram embeds
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
@@ -167,38 +195,56 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
     >
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
-            title={t('close')}
-          >
-            <X className="w-5 h-5 text-slate-800" />
-          </button>
 
           <div className="grid md:grid-cols-2 h-full">
-            <div className="relative h-[450px] md:h-[650px] bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
+            <div 
+              className="relative h-[450px] md:h-[650px] bg-gradient-to-br from-slate-100 to-slate-200" 
+              style={{ 
+                zIndex: 2, 
+                overflow: 'hidden',
+                overflowX: 'hidden',
+                overflowY: 'hidden'
+              }}
+            >
               {validImages.length > 0 ? (
                 <>
-                  <div className="relative w-full h-full">
-                    <div className="absolute inset-0 overflow-hidden p-4">
-                      <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                        <InstagramEmbed 
-                          key={validImages[currentImageIndex]} 
-                          postUrl={validImages[currentImageIndex]} 
-                          className="w-full max-h-full"
-                          priority={true}
-                          compact={false}
-                        />
-                      </div>
+                  <div 
+                    className="relative w-full h-full flex justify-center pt-4"
+                    style={{
+                      overflow: 'hidden',
+                      overflowX: 'hidden',
+                      overflowY: 'hidden',
+                      height: '100%',
+                      maxHeight: '100%'
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    <div 
+                      className="w-full max-w-sm"
+                      style={{
+                        overflow: 'hidden',
+                        maxHeight: '100%'
+                      }}
+                    >
+                      <InstagramEmbed 
+                        key={validImages[currentImageIndex]} 
+                        postUrl={validImages[currentImageIndex]} 
+                        className="w-full"
+                        priority={true}
+                        compact={true}
+                      />
                     </div>
                   </div>
                   
-                  {/* Navigation buttons */}
+                  {/* Navigation buttons - Desktop only */}
                   {validImages.length > 1 && (
                     <>
                       <button
                         onClick={handlePrevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-40"
+                        className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full p-3 shadow-xl transition-all duration-200"
+                        style={{ zIndex: 9999 }}
                         aria-label="Previous image"
                       >
                         <ChevronLeft className="w-6 h-6 text-slate-700" />
@@ -206,14 +252,18 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                       
                       <button
                         onClick={handleNextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full p-2 shadow-lg transition-all duration-200 z-40"
+                        className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full p-3 shadow-xl transition-all duration-200"
+                        style={{ zIndex: 9999 }}
                         aria-label="Next image"
                       >
                         <ChevronRight className="w-6 h-6 text-slate-700" />
                       </button>
                       
                       {/* Page indicator */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-40">
+                      <div 
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
+                        style={{ zIndex: 9999 }}
+                      >
                         {validImages.map((_, index) => (
                           <button
                             key={index}
@@ -223,6 +273,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                                 ? 'bg-slate-700 w-6'
                                 : 'bg-slate-400 hover:bg-slate-500'
                             }`}
+                            style={{ zIndex: 9999 }}
                             aria-label={`Go to image ${index + 1}`}
                           />
                         ))}

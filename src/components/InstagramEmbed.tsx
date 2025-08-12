@@ -107,7 +107,14 @@ export default function InstagramEmbed({
           margin: '0',
           padding: '0',
           width: '100%',
-          minHeight: compact ? '300px' : '400px'
+          height: compact ? '400px' : '500px',
+          maxHeight: compact ? '400px' : '500px',
+          minHeight: compact ? '400px' : '500px',
+          overflow: 'hidden',
+          overflowX: 'hidden',
+          overflowY: 'hidden',
+          zIndex: 1,
+          position: 'relative'
         }}
       >
         {/* Fallback content */}
