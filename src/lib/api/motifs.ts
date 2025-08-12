@@ -56,8 +56,8 @@ export async function fetchMotifs(forceRefresh = false): Promise<Motif[]> {
     if (error) {
       console.error('Error fetching motifs:', error.message || error)
       
-      // If the table doesn't exist (42P01 error), use mock data
-      if (error.code === '42P01') {
+      // If the table doesn't exist (42P01 error) or relation doesn't exist, use mock data
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
         console.log('Motifs table does not exist, using mock data')
         return mockMotifs
       }
@@ -73,8 +73,15 @@ export async function fetchMotifs(forceRefresh = false): Promise<Motif[]> {
     }
     
     return data as Motif[]
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error fetching motifs:', error)
+    
+    // If the table doesn't exist, use mock data
+    if (error.message?.includes('does not exist')) {
+      console.log('Motifs table does not exist (caught in catch), using mock data')
+      return mockMotifs
+    }
+    
     // Fall back to localStorage or mock data
     if (typeof window !== 'undefined') {
       const storedMotifs = JSON.parse(localStorage.getItem('ink-finder-motifs-table') || '[]')

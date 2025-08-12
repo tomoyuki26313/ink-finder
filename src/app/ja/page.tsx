@@ -17,9 +17,11 @@ export default function Home() {
   const { t, language } = useLanguage()
   const [artistsWithStudios, setArtistsWithStudios] = useState<ArtistWithStudio[]>([])
   const [styles, setStyles] = useState<any[]>([])
+  const [motifs, setMotifs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
+  const [selectedMotifs, setSelectedMotifs] = useState<string[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string[]>([])
   const [selectedArtist, setSelectedArtist] = useState<ArtistWithStudio | null>(null)
   const [sortBy, setSortBy] = useState<string>('followers')
@@ -48,6 +50,7 @@ export default function Home() {
   useEffect(() => {
     loadArtistsWithStudios()
     loadStyles()
+    loadMotifs()
     
     // Subscribe to artist updates from admin page
     const unsubscribe = subscribeToArtistUpdates(() => {
@@ -66,6 +69,17 @@ export default function Home() {
     } catch (error) {
       console.error('Error loading styles:', error)
       setStyles([])
+    }
+  }
+
+  const loadMotifs = async () => {
+    try {
+      const { fetchMotifs } = await import('@/lib/api/motifs')
+      const motifsData = await fetchMotifs()
+      setMotifs(motifsData)
+    } catch (error) {
+      console.error('Error loading motifs:', error)
+      setMotifs([])
     }
   }
 
@@ -182,6 +196,22 @@ export default function Home() {
       return styleIdsMatch || imageStylesMatch
     })()
     
+    const matchesMotifs = selectedMotifs.length === 0 || (() => {
+      // Check image-based motifs
+      const imageMotifsMatch = artist.image_motifs?.some(imageMotif => {
+        return imageMotif.motif_ids.some(motifId => {
+          const motif = motifs.find(m => m.id === motifId)
+          if (motif) {
+            const motifName = language === 'ja' ? motif.motif_name_ja : motif.motif_name_en
+            return selectedMotifs.includes(motifName)
+          }
+          return false
+        })
+      })
+      
+      return imageMotifsMatch
+    })()
+    
     // Normalize location for filtering (same logic as SearchFilters)
     const normalizeLocation = (location: string | undefined): string => {
       if (!location) return ''
@@ -239,8 +269,8 @@ export default function Home() {
       return false
     })
     
-    return matchesStyle && matchesLocation && matchesAdvanced
-  })), [artistsWithStudios, selectedStyles, selectedLocation, advancedFilters, sortBy, language, styles])
+    return matchesStyle && matchesMotifs && matchesLocation && matchesAdvanced
+  })), [artistsWithStudios, selectedStyles, selectedMotifs, selectedLocation, advancedFilters, sortBy, language, styles, motifs])
 
   // Paginate results
   const displayedArtists = useMemo(() => {
@@ -248,7 +278,7 @@ export default function Home() {
   }, [filteredArtists, itemsPerPage])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen" style={{backgroundColor: '#E6E6E6'}}>
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
         {/* Desktop Layout */}
         <div className="hidden md:block">
@@ -260,7 +290,7 @@ export default function Home() {
               <h1 className="text-black mb-1" style={{fontSize: '2.5rem', lineHeight: '35px', fontFamily: 'Arial Black, Arial, sans-serif', fontWeight: '900', letterSpacing: '-0.05em'}}>
                 {t('appName')}
               </h1>
-              <p className="text-sm font-roboto font-light text-slate-600 whitespace-nowrap">
+              <p className="text-sm font-roboto font-light text-slate-700 whitespace-nowrap">
                 {t('tagline')}
               </p>
             </div>
@@ -277,7 +307,7 @@ export default function Home() {
               <h1 className="text-2xl text-black mb-1" style={{fontFamily: 'Arial Black, Arial, sans-serif', fontWeight: '900', letterSpacing: '-0.05em'}}>
                 {t('appName')}
               </h1>
-              <p className="text-xs font-roboto font-light text-slate-600 whitespace-nowrap" style={{height: '16.5px', lineHeight: '16.5px'}}>
+              <p className="text-xs font-roboto font-light text-slate-700 whitespace-nowrap" style={{height: '16.5px', lineHeight: '16.5px'}}>
                 {t('tagline')}
               </p>
             </div>
@@ -289,7 +319,7 @@ export default function Home() {
         {!loading && !error && (
           <>
             <div className="mb-4 text-center">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-700">
                 {language === 'ja' ? (
                   <>
                     <span className="block md:inline">本サイトはタトゥーアーティストやスタジオの情報紹介を目的としており、各掲載先とは直接の関係はありません。</span>
@@ -306,12 +336,15 @@ export default function Home() {
             <SearchFilters
               selectedStyles={selectedStyles}
               setSelectedStyles={setSelectedStyles}
+              selectedMotifs={selectedMotifs}
+              setSelectedMotifs={setSelectedMotifs}
               selectedLocation={selectedLocation}
               setSelectedLocation={setSelectedLocation}
               advancedFilters={advancedFilters}
               setAdvancedFilters={setAdvancedFilters}
               artists={artistsWithStudios}
               styles={styles}
+              motifs={motifs}
             />
           </>
         )}
@@ -320,7 +353,7 @@ export default function Home() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-4" />
-              <p className="text-slate-600">{t('loadingArtists')}</p>
+              <p className="text-slate-700">{t('loadingArtists')}</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
@@ -333,7 +366,7 @@ export default function Home() {
                   {filteredArtists.length}{' '}
                   {t('artistsFound')}
                   {filteredArtists.length > itemsPerPage && (
-                    <span className="text-sm font-normal text-gray-600 ml-2">
+                    <span className="text-sm font-normal text-gray-800 ml-2">
                       ({displayedArtists.length}件表示中)
                     </span>
                   )}
@@ -363,17 +396,20 @@ export default function Home() {
               {filteredArtists.length === 0 ? (
                 <div className="text-center py-20">
                   <p className="text-slate-700 text-lg">{t('noArtistsFound')}</p>
-                  <p className="text-slate-600 mt-2">To load real artist data, go to the <a href="/admin" className="text-purple-600 hover:underline">Admin page</a> and click "Load 60 Realistic Artists"</p>
+                  <p className="text-slate-700 mt-2">To load real artist data, go to the <a href="/admin" className="text-purple-600 hover:underline">Admin page</a> and click "Load 60 Realistic Artists"</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayedArtists.map((artist) => (
+                  {displayedArtists.map((artist, index) => (
                     <ArtistCard
                       key={artist.id}
                       artist={artist}
                       onClick={() => handleArtistClick(artist)}
                       availableStyles={styles}
+                      availableMotifs={motifs}
                       selectedStyles={selectedStyles}
+                      selectedMotifs={selectedMotifs}
+                      delay={index * 50} // 各カードに50msずつ遅延を追加
                     />
                   ))}
                 </div>
@@ -381,7 +417,7 @@ export default function Home() {
               
               {filteredArtists.length > displayedArtists.length && (
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-800 mb-3">
                     {filteredArtists.length}件中{displayedArtists.length}件を表示
                   </p>
                   <button
@@ -402,13 +438,14 @@ export default function Home() {
           artist={selectedArtist}
           onClose={() => setSelectedArtist(null)}
           availableStyles={styles}
+          availableMotifs={motifs}
         />
       )}
 
       <footer className="bg-slate-100 mt-16 py-8 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {language === 'ja' && (
-            <p className="text-sm text-slate-600 text-center leading-relaxed mb-4">{t('heroText')}</p>
+            <p className="text-sm text-slate-700 text-center leading-relaxed mb-4">{t('heroText')}</p>
           )}
           <div className="flex items-center justify-center gap-4 mb-2">
             <p className="text-xs text-slate-700">

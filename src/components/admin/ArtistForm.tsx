@@ -210,6 +210,11 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       )
     }
     
+    console.log('🔍 ArtistForm: Saving data with motifs:', {
+      imageMotifs,
+      filteredImageMotifs: cleanedData.image_motifs,
+      formImages: formData.images
+    })
 
     onSave(cleanedData)
   }
@@ -279,6 +284,7 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       ? currentMotifIds.filter(id => id !== motifId)
       : [...currentMotifIds, motifId]
     
+    console.log('🎨 Motif selection changed:', { imageUrl, motifId, currentMotifIds, newMotifIds })
     updateImageMotifsForImage(imageUrl, newMotifIds)
   }
 

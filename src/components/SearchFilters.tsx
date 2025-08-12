@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, memo } from 'react'
-import { Palette, MapPin, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { getLocations } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getStyleTranslation } from '@/lib/styleTranslations'
@@ -10,6 +10,8 @@ import { getPrefectureTranslation } from '@/lib/prefectureTranslations'
 interface SearchFiltersProps {
   selectedStyles: string[]
   setSelectedStyles: (styles: string[]) => void
+  selectedMotifs: string[]
+  setSelectedMotifs: (motifs: string[]) => void
   selectedLocation: string[]
   setSelectedLocation: (location: string[]) => void
   advancedFilters: {
@@ -33,6 +35,7 @@ interface SearchFiltersProps {
   setAdvancedFilters: (filters: any) => void
   artists?: any[] // Add artists prop for frequency calculation
   styles?: any[] // Add styles prop for ID to name conversion
+  motifs?: any[] // Add motifs prop for ID to name conversion
 }
 
 // 主要な地域リスト（シンプル表記）
@@ -46,15 +49,19 @@ const priorityStyles = ['和彫り', 'アニメ', 'ファインライン', 'ア�
 const SearchFilters = memo(function SearchFilters({
   selectedStyles,
   setSelectedStyles,
+  selectedMotifs,
+  setSelectedMotifs,
   selectedLocation,
   setSelectedLocation,
   advancedFilters,
   setAdvancedFilters,
   artists = [],
-  styles = []
+  styles = [],
+  motifs = []
 }: SearchFiltersProps) {
   const { t, language } = useLanguage()
   const [showAllStyles, setShowAllStyles] = useState(false)
+  const [showAllMotifs, setShowAllMotifs] = useState(false)
 
   // Calculate style frequency from artists data (unique artist count per style)
   const getStyleFrequency = () => {
@@ -103,6 +110,47 @@ const SearchFilters = memo(function SearchFilters({
     const result: { [key: string]: number } = {}
     Object.entries(styleCount).forEach(([styleName, artistSet]) => {
       result[styleName] = artistSet.size
+    })
+    
+    return result
+  }
+
+  // Calculate motif frequency from artists data (unique artist count per motif)
+  const getMotifFrequency = () => {
+    const motifCount: { [key: string]: Set<string> } = {}
+    
+    artists.forEach(artist => {
+      const artistId = artist.id
+      const uniqueMotifsForArtist = new Set<string>()
+      
+      // Collect from image_motifs
+      if (artist.image_motifs && Array.isArray(artist.image_motifs)) {
+        artist.image_motifs.forEach((imageMotif: any) => {
+          if (imageMotif.motif_ids && Array.isArray(imageMotif.motif_ids)) {
+            imageMotif.motif_ids.forEach((id: number) => {
+              const motifObj = motifs.find((m: any) => m.id === id)
+              if (motifObj) {
+                const motifName = language === 'ja' ? motifObj.motif_name_ja : motifObj.motif_name_en
+                uniqueMotifsForArtist.add(motifName)
+              }
+            })
+          }
+        })
+      }
+      
+      // Add this artist to each motif they have (unique per artist)
+      uniqueMotifsForArtist.forEach(motifName => {
+        if (!motifCount[motifName]) {
+          motifCount[motifName] = new Set()
+        }
+        motifCount[motifName].add(artistId)
+      })
+    })
+    
+    // Convert Sets to counts
+    const result: { [key: string]: number } = {}
+    Object.entries(motifCount).forEach(([motifName, artistSet]) => {
+      result[motifName] = artistSet.size
     })
     
     return result
@@ -181,6 +229,31 @@ const SearchFilters = memo(function SearchFilters({
     })
   }
 
+  // Sort motifs by frequency (most popular first)
+  const getSortedMotifs = () => {
+    const motifFrequency = getMotifFrequency()
+    
+    // Convert database motifs to display format with frequency
+    const motifsWithFreq = motifs.map(motif => {
+      const displayName = language === 'ja' ? motif.motif_name_ja : motif.motif_name_en
+      return {
+        dbMotif: motif,
+        displayName,
+        frequency: motifFrequency[displayName] || 0
+      }
+    })
+    
+    // Sort by frequency (descending) - most popular first, zero frequency last
+    return motifsWithFreq.sort((a, b) => {
+      // If both have 0 frequency, sort alphabetically
+      if (a.frequency === 0 && b.frequency === 0) {
+        return a.displayName.localeCompare(b.displayName)
+      }
+      // Otherwise sort by frequency (higher first)
+      return b.frequency - a.frequency
+    })
+  }
+
   // Get unique regions from artist data and normalize them
   const getUniqueRegions = () => {
     const rawRegions = [...new Set(artists.map(artist => 
@@ -248,6 +321,14 @@ const SearchFilters = memo(function SearchFilters({
     }
   }
 
+  const toggleMotif = (motif: string) => {
+    if (selectedMotifs.includes(motif)) {
+      setSelectedMotifs(selectedMotifs.filter(m => m !== motif))
+    } else {
+      setSelectedMotifs([...selectedMotifs, motif])
+    }
+  }
+
   const toggleLocation = (location: string) => {
     if (selectedLocation.includes(location)) {
       setSelectedLocation(selectedLocation.filter(l => l !== location))
@@ -259,11 +340,12 @@ const SearchFilters = memo(function SearchFilters({
 
   const clearFilters = () => {
     setSelectedStyles([])
+    setSelectedMotifs([])
     setSelectedLocation([])
     setAdvancedFilters({})
   }
 
-  const hasActiveFilters = selectedStyles.length > 0 || selectedLocation.length > 0
+  const hasActiveFilters = selectedStyles.length > 0 || selectedMotifs.length > 0 || selectedLocation.length > 0
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -283,8 +365,7 @@ const SearchFilters = memo(function SearchFilters({
       <div className="space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Palette className="w-4 h-4 text-slate-700" />
-            <h4 className="font-medium text-slate-700">{t('style')}</h4>
+            <h4 className="font-bold text-slate-800">{t('style')}</h4>
             {selectedStyles.length > 0 && (
               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                 {selectedStyles.length} {t('selected')}
@@ -324,8 +405,47 @@ const SearchFilters = memo(function SearchFilters({
 
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <MapPin className="w-4 h-4 text-slate-700" />
-            <h4 className="font-medium text-slate-700">{t('location')}</h4>
+            <h4 className="font-bold text-slate-800">{language === 'ja' ? 'デザイン' : 'Motifs'}</h4>
+            {selectedMotifs.length > 0 && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                {selectedMotifs.length} {t('selected')}
+              </span>
+            )}
+          </div>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {(showAllMotifs ? getSortedMotifs() : getSortedMotifs().slice(0, 6))
+                .map((motifInfo, index) => (
+                  <button
+                    key={`${motifInfo.dbMotif.id}-${index}`}
+                    onClick={() => toggleMotif(motifInfo.displayName)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                      selectedMotifs.includes(motifInfo.displayName)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {motifInfo.displayName}
+                    {motifInfo.frequency > 0 && (
+                      <span className="ml-1 text-xs opacity-75">({motifInfo.frequency})</span>
+                    )}
+                  </button>
+                ))}
+            </div>
+            {motifs.length > 6 && (
+              <button
+                onClick={() => setShowAllMotifs(!showAllMotifs)}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {showAllMotifs ? t('showLess') : `${t('showMore')} (${motifs.length - 6})`}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="font-bold text-slate-800">{t('location')}</h4>
             {selectedLocation.length > 0 && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                 {selectedLocation.length} {t('selected')}

@@ -85,7 +85,7 @@ export default function InstagramEmbed({
       <div className={`bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 border border-pink-200 flex items-center justify-center ${className}`}>
         <div className="text-center">
           <Instagram className="w-8 h-8 mx-auto mb-2 text-pink-600" />
-          <p className="text-xs text-gray-600">Instagram Post</p>
+          <p className="text-xs text-gray-800">Instagram Post</p>
         </div>
       </div>
     )
@@ -113,7 +113,7 @@ export default function InstagramEmbed({
         {/* Fallback content */}
         <div className="p-4 text-center">
           <Instagram className="w-8 h-8 mx-auto mb-2 text-pink-600" />
-          <p className="text-sm text-gray-600">Loading Instagram post...</p>
+          <p className="text-sm text-gray-800">Loading Instagram post...</p>
         </div>
       </blockquote>
     </div>

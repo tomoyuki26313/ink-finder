@@ -478,12 +478,18 @@ function filterArtistDataForSupabase(artistData: Partial<Artist>): Record<string
     }
   })
   
-  // Re-enable image_styles after database migration is complete
+  // Re-enable image_styles and image_motifs after database migration is complete
   if (artistData.image_styles) {
     safeData.image_styles = artistData.image_styles
   }
   
+  if (artistData.image_motifs) {
+    safeData.image_motifs = artistData.image_motifs
+  }
+  
+  console.log('📋 Original artist data image_motifs:', artistData.image_motifs)
   console.log('📋 Filtered data keys:', Object.keys(safeData))
+  console.log('📋 Filtered data image_motifs:', safeData.image_motifs)
   console.log('📋 Filtered data values:', safeData)
   return safeData
 }

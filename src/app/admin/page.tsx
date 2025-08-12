@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Eye, Building2, Users, Globe, Clock, Upload, ArrowUpDown, ArrowUp, ArrowDown, Palette } from 'lucide-react'
-import { Artist, Studio, Style } from '@/types/database'
+import { Plus, Edit, Trash2, Eye, Building2, Users, Globe, Clock, Upload, ArrowUpDown, ArrowUp, ArrowDown, Palette, Sparkles } from 'lucide-react'
+import { Artist, Studio, Style, Motif } from '@/types/database'
 import { getStoredArtists, saveArtists } from '@/lib/dataStore'
 import { fetchArtists, createStudio, updateStudio, deleteStudio } from '@/lib/api'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import ArtistForm from '@/components/admin/ArtistForm'
 import StudioForm from '@/components/admin/StudioForm'
 import StyleForm from '@/components/admin/StyleForm'
+import MotifForm from '@/components/admin/MotifForm'
+import DesignSystemManager from '@/components/admin/DesignSystemManager'
 import ArtistPreview from '@/components/admin/ArtistPreview'
 import DataManager from '@/components/admin/DataManager'
 import CrawlDashboard from '@/components/admin/CrawlDashboard'
@@ -16,17 +18,19 @@ import ArtistReview from '@/components/admin/ArtistReview'
 import DeploymentDashboard from '@/components/admin/DeploymentDashboard'
 import InstagramEmbed from '@/components/InstagramEmbed'
 
-type TabType = 'artists' | 'studios' | 'styles' | 'crawling' | 'review' | 'deploy'
+type TabType = 'artists' | 'studios' | 'styles' | 'motifs' | 'design' | 'crawling' | 'review' | 'deploy'
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>('artists')
   const [artists, setArtists] = useState<Artist[]>([])
   const [studios, setStudios] = useState<Studio[]>([])
   const [styles, setStyles] = useState<Style[]>([])
+  const [motifs, setMotifs] = useState<Motif[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingArtist, setEditingArtist] = useState<Artist | null>(null)
   const [editingStudio, setEditingStudio] = useState<Studio | null>(null)
   const [editingStyle, setEditingStyle] = useState<Style | null>(null)
+  const [editingMotif, setEditingMotif] = useState<Motif | null>(null)
   const [previewArtist, setPreviewArtist] = useState<Artist | null>(null)
   
   // Sorting state for artists
@@ -135,6 +139,7 @@ export default function AdminPage() {
     loadArtists()
     loadStudios()
     loadStyles()
+    loadMotifs()
     initializeCrawler()
   }, [])
   
@@ -213,6 +218,20 @@ export default function AdminPage() {
       setStyles([])
     }
   }
+
+  const loadMotifs = async () => {
+    try {
+      const { fetchMotifs } = await import('@/lib/api/motifs')
+      const motifsData = await fetchMotifs()
+      console.log('Raw motifs data from database:', motifsData)
+      setMotifs(motifsData)
+      console.log(`✨ Loaded ${motifsData.length} motifs`)
+      console.log('Current motifs state after update:', motifsData.map(m => ({ id: m.id, ja: m.motif_name_ja, en: m.motif_name_en })))
+    } catch (error) {
+      console.error('❌ Error loading motifs:', error)
+      setMotifs([])
+    }
+  }
   
   // Update stats when data changes
   useEffect(() => {
@@ -226,6 +245,7 @@ export default function AdminPage() {
   const handleSaveArtist = async (artistData: Omit<Artist, 'id' | 'created_at' | 'view_count'>) => {
     try {
       console.log('🔍 Saving artist data:', artistData)
+      console.log('🎨 Image motifs in save data:', artistData.image_motifs)
       
       if (isSupabaseConfigured) {
         // 本番環境（Supabase）に直接保存
@@ -423,6 +443,15 @@ export default function AdminPage() {
     setEditingStyle(style)
     setEditingArtist(null)
     setEditingStudio(null)
+    setEditingMotif(null)
+    setShowForm(true)
+  }
+
+  const handleEditMotif = (motif: Motif) => {
+    setEditingMotif(motif)
+    setEditingArtist(null)
+    setEditingStudio(null)
+    setEditingStyle(null)
     setShowForm(true)
   }
 
@@ -444,19 +473,75 @@ export default function AdminPage() {
     }
   }
 
+  const handleSaveMotif = async (motifData: Omit<Motif, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { createMotif, updateMotif } = await import('@/lib/api/motifs')
+      
+      if (editingMotif) {
+        // Update existing motif
+        console.log('Updating motif:', editingMotif.id, 'with data:', motifData)
+        const updated = await updateMotif(editingMotif.id, motifData)
+        if (updated) {
+          console.log('✅ Motif updated:', updated.motif_name_en)
+          console.log('Updated motif data:', updated)
+          await loadMotifs()
+          console.log('Motifs reloaded after update')
+        }
+      } else {
+        // Create new motif
+        const created = await createMotif(motifData)
+        if (created) {
+          console.log('✅ Motif created:', created.motif_name_en)
+          await loadMotifs()
+        }
+      }
+      setEditingMotif(null)
+      setShowForm(false)
+    } catch (error: any) {
+      console.error('Error saving motif:', error)
+      alert(`Error saving motif: ${error.message || 'Unknown error'}`)
+    }
+  }
+
+  const handleDeleteMotif = async (id: number) => {
+    if (confirm('Are you sure you want to delete this motif?')) {
+      try {
+        const { deleteMotif } = await import('@/lib/api/motifs')
+        const success = await deleteMotif(id)
+        if (success) {
+          console.log('✅ Motif deleted successfully')
+          await loadMotifs()
+        } else {
+          alert('Failed to delete motif')
+        }
+      } catch (error: any) {
+        console.error('Error deleting motif:', error)
+        alert(`Error deleting motif: ${error.message || 'Unknown error'}`)
+      }
+    }
+  }
+
   const handleAddNew = () => {
     if (activeTab === 'artists') {
       setEditingArtist(null)
       setEditingStudio(null)
       setEditingStyle(null)
+      setEditingMotif(null)
     } else if (activeTab === 'studios') {
       setEditingStudio(null)
       setEditingArtist(null)
       setEditingStyle(null)
+      setEditingMotif(null)
     } else if (activeTab === 'styles') {
       setEditingStyle(null)
       setEditingArtist(null)
       setEditingStudio(null)
+      setEditingMotif(null)
+    } else if (activeTab === 'motifs') {
+      setEditingMotif(null)
+      setEditingArtist(null)
+      setEditingStudio(null)
+      setEditingStyle(null)
     }
     setShowForm(true)
   }
@@ -466,6 +551,7 @@ export default function AdminPage() {
     setEditingArtist(null)
     setEditingStudio(null)
     setEditingStyle(null)
+    setEditingMotif(null)
   }
 
   const getStudioName = (studioId: string) => {
@@ -958,7 +1044,7 @@ export default function AdminPage() {
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles') && (
+          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs') && (
             <button
               onClick={handleAddNew}
               className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
@@ -973,13 +1059,13 @@ export default function AdminPage() {
       <div className="hidden lg:block p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
-          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles') && (
+          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs') && (
             <button
               onClick={handleAddNew}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Add New {activeTab === 'artists' ? 'Artist' : activeTab === 'studios' ? 'Studio' : 'Style'}
+              Add New {activeTab === 'artists' ? 'Artist' : activeTab === 'studios' ? 'Studio' : activeTab === 'styles' ? 'Style' : 'デザイン'}
             </button>
           )}
         </div>
@@ -1018,6 +1104,28 @@ export default function AdminPage() {
           >
             <Palette className="w-4 h-4" />
             Styles ({styles.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('motifs')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'motifs'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            モチーフ ({motifs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('design')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'design'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Palette className="w-4 h-4" />
+            デザインシステム
           </button>
           <button
             onClick={() => setActiveTab('crawling')}
@@ -1072,10 +1180,16 @@ export default function AdminPage() {
                   onSave={handleSaveStudio}
                   onCancel={handleCloseForm}
                 />
-              ) : (
+              ) : activeTab === 'styles' ? (
                 <StyleForm
                   style={editingStyle}
                   onSave={handleSaveStyle}
+                  onCancel={handleCloseForm}
+                />
+              ) : (
+                <MotifForm
+                  motif={editingMotif}
+                  onSave={handleSaveMotif}
                   onCancel={handleCloseForm}
                 />
               )}
@@ -1590,6 +1704,91 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Motifs Tab */}
+        {activeTab === 'motifs' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                デザイン ({motifs.length})
+              </h2>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Japanese Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      English Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Created Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {motifs.map((motif) => (
+                    <tr key={motif.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        #{motif.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {motif.motif_name_ja}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {motif.motif_name_en}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {new Date(motif.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-700">
+                          {new Date(motif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditMotif(motif)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMotif(motif.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Design System Tab */}
+        {activeTab === 'design' && (
+          <DesignSystemManager />
+        )}
+
         {/* Crawling Tab */}
         {activeTab === 'crawling' && (
           <CrawlDashboard
@@ -1789,6 +1988,17 @@ export default function AdminPage() {
           >
             <Palette className="w-5 h-5" />
             <span className="text-xs">Styles</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('motifs')}
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+              activeTab === 'motifs'
+                ? 'text-blue-600'
+                : 'text-gray-500'
+            }`}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-xs">デザイン</span>
           </button>
           <button
             onClick={() => setActiveTab('crawling')}

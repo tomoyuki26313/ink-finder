@@ -2,40 +2,59 @@
 
 import { X, MapPin, Instagram, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ArtistWithStudio, Style } from '@/types/database'
+import { ArtistWithStudio, Style, Motif } from '@/types/database'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
 import { getStyleTranslation } from '@/lib/styleTranslations'
 import { getPrefectureTranslation } from '@/lib/prefectureTranslations'
 import { getAllStylesFromImages } from '@/lib/imageStyles'
+import { getAllMotifsFromImages } from '@/lib/imageMotifs'
 import InstagramEmbed from './InstagramEmbed'
 
 interface ArtistModalProps {
   artist: ArtistWithStudio
   onClose: () => void
   availableStyles?: Style[]
+  availableMotifs?: Motif[]
 }
 
-export default function ArtistModal({ artist, onClose, availableStyles = [] }: ArtistModalProps) {
+export default function ArtistModal({ artist, onClose, availableStyles = [], availableMotifs = [] }: ArtistModalProps) {
   const { t, language } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [styles, setStyles] = useState<Style[]>(availableStyles)
+  const [motifs, setMotifs] = useState<Motif[]>(availableMotifs)
 
-  // Load styles if not provided
+  // Load styles and motifs if not provided
   useEffect(() => {
-    if (availableStyles.length === 0) {
-      const loadStyles = async () => {
+    if (availableStyles.length === 0 || availableMotifs.length === 0) {
+      const loadStylesAndMotifs = async () => {
         try {
-          const { fetchStyles } = await import('@/lib/api/styles')
-          const fetchedStyles = await fetchStyles()
-          setStyles(fetchedStyles)
+          const promises = []
+          if (availableStyles.length === 0) {
+            promises.push(import('@/lib/api/styles').then(module => module.fetchStyles()))
+          }
+          if (availableMotifs.length === 0) {
+            promises.push(import('@/lib/api/motifs').then(module => module.fetchMotifs()))
+          }
+          
+          const results = await Promise.all(promises)
+          
+          if (availableStyles.length === 0 && results[0]) {
+            setStyles(results[0])
+          }
+          if (availableMotifs.length === 0) {
+            const motifResult = availableStyles.length === 0 ? results[1] : results[0]
+            if (motifResult) {
+              setMotifs(motifResult)
+            }
+          }
         } catch (error) {
-          console.error('Error loading styles:', error)
+          console.error('Error loading styles and motifs:', error)
         }
       }
-      loadStyles()
+      loadStylesAndMotifs()
     }
-  }, [availableStyles])
+  }, [availableStyles, availableMotifs])
 
   // Handle both instagram_posts and images arrays, with fallback to empty array
   const postImages = artist.instagram_posts || artist.images || []
@@ -70,6 +89,23 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
   }
   
   const displayStyles = getDisplayStyles()
+  
+  // Get display motifs with proper priority: image_motifs
+  const getDisplayMotifs = () => {
+    if (artist.image_motifs && artist.image_motifs.length > 0) {
+      const allMotifIds = getAllMotifsFromImages(artist)
+      return allMotifIds.map(motifId => {
+        const motif = motifs.find(m => m.id === motifId)
+        if (motif) {
+          return language === 'ja' ? motif.motif_name_ja : motif.motif_name_en
+        }
+        return `Motif ${motifId}` // Fallback if motif not found
+      }).filter(Boolean)
+    }
+    return []
+  }
+  
+  const displayMotifs = getDisplayMotifs()
   
   // Filter for valid Instagram URLs only
   const isValidInstagramUrl = (url: string) => {
@@ -136,7 +172,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
             className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
             title={t('close')}
           >
-            <X className="w-5 h-5 text-slate-600" />
+            <X className="w-5 h-5 text-slate-800" />
           </button>
 
           <div className="grid md:grid-cols-2 h-full">
@@ -195,7 +231,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
                   )}
                 </>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                <div className="absolute inset-0 flex items-center justify-center text-slate-800">
                   <div className="text-center">
                     <div className="text-6xl mb-2">📸</div>
                     <p className="text-sm">No Instagram posts available</p>
@@ -207,7 +243,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
             <div className="p-6 md:p-8 overflow-y-auto max-h-[90vh] md:max-h-[650px]">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-slate-800 mb-1">{getLocalizedField(artist, 'name', language)}</h2>
-                <div className="flex items-center gap-4 text-sm text-slate-600">
+                <div className="flex items-center gap-4 text-sm text-slate-800">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     <span>{getPrefectureTranslation(artist.location || artist.studio?.location || '不明', language)}</span>
@@ -219,7 +255,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
                 {/* Artist Bio */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-2">{t('about')}</h3>
-                  <p className="text-slate-600 leading-relaxed">{getLocalizedField(artist, 'bio', language)}</p>
+                  <p className="text-slate-800 leading-relaxed">{getLocalizedField(artist, 'bio', language)}</p>
                 </div>
 
                 {/* Styles */}
@@ -233,6 +269,23 @@ export default function ArtistModal({ artist, onClose, availableStyles = [] }: A
                           className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
                         >
                           {style}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Motifs */}
+                {displayMotifs.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">{language === 'ja' ? 'デザイン' : 'Motifs'}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {displayMotifs.map((motif, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                        >
+                          {motif}
                         </span>
                       ))}
                     </div>
