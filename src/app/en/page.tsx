@@ -377,7 +377,7 @@ export default function Home() {
                     value={sortBy}
                     onChange={(e) => handleSortChange(e.target.value)}
                   >
-                    <option value="followers">人気順</option>
+                    <option value="followers">Sort by: Popular</option>
                     <option value="created_at">{t('sortNewest')}</option>
                   </select>
                   
