@@ -207,15 +207,34 @@ export default function AdminPage() {
 
   const loadStyles = async () => {
     try {
+      console.log('Loading styles...')
       const { fetchStyles } = await import('@/lib/api/styles')
       const stylesData = await fetchStyles()
       console.log('Raw styles data from database:', stylesData)
+      
+      if (!stylesData || !Array.isArray(stylesData)) {
+        console.error('Invalid styles data:', stylesData)
+        setStyles([])
+        return
+      }
+      
       setStyles(stylesData)
       console.log(`📝 Loaded ${stylesData.length} styles`)
       console.log('Current styles state after update:', stylesData.map(s => ({ id: s.id, ja: s.style_name_ja, en: s.style_name_en })))
     } catch (error) {
       console.error('❌ Error loading styles:', error)
-      setStyles([])
+      // Try direct API call as fallback
+      try {
+        const response = await fetch('/api/styles')
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Loaded styles via direct API:', data.length)
+          setStyles(data)
+        }
+      } catch (apiError) {
+        console.error('API fallback also failed:', apiError)
+        setStyles([])
+      }
     }
   }
 

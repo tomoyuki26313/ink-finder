@@ -51,8 +51,12 @@ export default function StyleForm({ style, onSave, onCancel }: StyleFormProps) {
     setIsSubmitting(true)
     try {
       await onSave(formData)
-    } catch (error) {
-      console.error('Error saving style:', error)
+    } catch (error: any) {
+      console.error('Error saving style:', {
+        message: error?.message,
+        error: error
+      })
+      alert(`Error saving style: ${error?.message || 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
