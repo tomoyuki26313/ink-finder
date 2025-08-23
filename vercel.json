@@ -1,7 +1,4 @@
 {
-  "env": {
-    "NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION": "@google_site_verification"
-  },
   "headers": [
     {
       "source": "/google4037780cae863123.html",
