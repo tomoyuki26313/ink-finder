@@ -651,7 +651,7 @@ export default function LocalPage() {
         <div className="mt-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-4" />
+              <Loader2 className="w-8 h-8 text-black animate-spin mb-4" />
               <p className="text-slate-600">{t('loadingArtists')}</p>
             </div>
           ) : (

@@ -285,12 +285,6 @@ export default function Home() {
         <div className="hidden md:block">
           <div className="max-w-[1261px] mx-auto px-4 relative py-6">
             <div className="absolute top-4 right-4 flex items-center gap-4">
-              <Link
-                href="/en/blog"
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                Blog
-              </Link>
               <LanguageToggle />
             </div>
             <div className="flex flex-col items-center justify-center">
@@ -308,12 +302,6 @@ export default function Home() {
         <div className="block md:hidden">
           <div className="w-full px-4 relative py-4">
             <div className="absolute top-4 right-4 flex items-center gap-2">
-              <Link
-                href="/en/blog"
-                className="px-3 py-1 text-xs font-medium text-gray-700 hover:text-black transition-colors bg-gray-100 rounded hover:bg-gray-200"
-              >
-                Blog
-              </Link>
               <LanguageToggle />
             </div>
             <div className="flex flex-col items-center justify-center">
@@ -365,7 +353,7 @@ export default function Home() {
         <div className="mt-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-4" />
+              <Loader2 className="w-8 h-8 text-black animate-spin mb-4" />
               <p className="text-slate-700">{t('loadingArtists')}</p>
             </div>
           ) : error ? (

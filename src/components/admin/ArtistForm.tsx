@@ -1,11 +1,12 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { X, Plus, Trash2, Languages, Tag, ChevronUp, ChevronDown } from 'lucide-react'
+import { X, Plus, Trash2, Languages, Tag, ChevronUp, ChevronDown, AlertTriangle } from 'lucide-react'
 import { Artist, Studio, Style, ImageStyle, Motif, ImageMotif } from '@/types/database'
 import InstagramUrlValidator from './InstagramUrlValidator'
 import { getStylesForImage, updateImageStyles, updateArtistStylesFromImages, getAllStylesFromImages } from '@/lib/imageStyles'
 import { getMotifIdsForImage, updateImageMotifs, getAllMotifsFromImages } from '@/lib/imageMotifs'
+import { checkArtistDuplicate, DuplicateCheckResult } from '@/lib/artistValidation'
 
 interface ArtistFormProps {
   artist?: Artist | null
@@ -73,6 +74,11 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
   const [imageMotifs, setImageMotifs] = useState<ImageMotif[]>([])
   const [showImageStyleModal, setShowImageStyleModal] = useState<number | null>(null)
   const [followerInputValue, setFollowerInputValue] = useState<string>('')
+  
+  // Duplicate check state
+  const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResult>({ isDuplicate: false })
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
+  const [duplicateCheckTimeout, setDuplicateCheckTimeout] = useState<NodeJS.Timeout | null>(null)
   
   // Create initial form data
   const createFormData = (currentArtist: Artist | null | undefined) => {
@@ -179,6 +185,58 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
     }
   }, [artist?.id, lastArtistId])
 
+  // Debounced duplicate check function
+  const performDuplicateCheck = useCallback(async (instagramHandle: string) => {
+    if (!instagramHandle.trim()) {
+      setDuplicateCheck({ isDuplicate: false })
+      return
+    }
+    
+    setIsCheckingDuplicate(true)
+    
+    try {
+      const result = await checkArtistDuplicate(instagramHandle, artist?.id)
+      setDuplicateCheck(result)
+    } catch (error) {
+      console.error('Duplicate check error:', error)
+      setDuplicateCheck({ 
+        isDuplicate: false, 
+        message: '重複チェック中にエラーが発生しました。' 
+      })
+    } finally {
+      setIsCheckingDuplicate(false)
+    }
+  }, [artist?.id])
+
+  // Handle Instagram handle input change with debounced duplicate check
+  const handleInstagramHandleChange = (value: string) => {
+    setFormData(prev => ({ ...prev, instagram_handle: value }))
+    
+    // Clear previous timeout
+    if (duplicateCheckTimeout) {
+      clearTimeout(duplicateCheckTimeout)
+    }
+    
+    // Reset duplicate check state immediately
+    setDuplicateCheck({ isDuplicate: false })
+    
+    // Set new timeout for duplicate check (1 second delay)
+    const timeout = setTimeout(() => {
+      performDuplicateCheck(value)
+    }, 1000)
+    
+    setDuplicateCheckTimeout(timeout)
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (duplicateCheckTimeout) {
+        clearTimeout(duplicateCheckTimeout)
+      }
+    }
+  }, [duplicateCheckTimeout])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -195,6 +253,12 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
 
     if (hasInvalidUrls) {
       alert('Please fix invalid Instagram URLs before saving')
+      return
+    }
+
+    // Check for duplicate Instagram handle
+    if (duplicateCheck.isDuplicate) {
+      alert(duplicateCheck.message || 'このアーティストは既に登録されています。')
       return
     }
     
@@ -563,10 +627,37 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
                 if (value.startsWith('@')) {
                   value = value.substring(1)
                 }
-                setFormData(prev => ({ ...prev, instagram_handle: value }))
+                handleInstagramHandleChange(value)
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-700"
+              className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:border-blue-500 placeholder:text-gray-700 ${
+                duplicateCheck.isDuplicate 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
             />
+            
+            {/* Duplicate check status */}
+            {formData.instagram_handle && (
+              <div className="mt-1 text-sm">
+                {isCheckingDuplicate && (
+                  <div className="flex items-center text-blue-600">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                    重複チェック中...
+                  </div>
+                )}
+                {duplicateCheck.isDuplicate && (
+                  <div className="flex items-center text-red-600">
+                    <AlertTriangle className="w-4 h-4 mr-1" />
+                    {duplicateCheck.message}
+                  </div>
+                )}
+                {!isCheckingDuplicate && !duplicateCheck.isDuplicate && formData.instagram_handle.trim() && (
+                  <div className="text-green-600">
+                    ✓ このアカウントは利用可能です
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
