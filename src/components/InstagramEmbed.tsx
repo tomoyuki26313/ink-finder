@@ -8,6 +8,8 @@ interface InstagramEmbedProps {
   className?: string
   compact?: boolean
   priority?: boolean
+  fullHeight?: boolean // Add option to show full height
+  style?: React.CSSProperties
 }
 
 const getEmbedIdFromUrl = (url: string): string | null => {
@@ -34,7 +36,9 @@ export default function InstagramEmbed({
   postUrl, 
   className = '', 
   compact = false, 
-  priority = false
+  priority = false,
+  fullHeight = false,
+  style = {}
 }: InstagramEmbedProps) {
   const embedRef = useRef<HTMLDivElement>(null)
   const [loaded, setLoaded] = useState(false)
@@ -93,7 +97,7 @@ export default function InstagramEmbed({
 
   // All views now use Instagram's official blockquote format
   return (
-    <div className={`relative instagram-embed-container ${className}`} ref={embedRef}>
+    <div className={`relative instagram-embed-container ${className}`} ref={embedRef} style={style}>
       <blockquote
         className="instagram-media"
         data-instgrm-captioned
@@ -107,12 +111,12 @@ export default function InstagramEmbed({
           margin: '0',
           padding: '0',
           width: '100%',
-          height: compact ? '400px' : '500px',
-          maxHeight: compact ? '400px' : '500px',
-          minHeight: compact ? '400px' : '500px',
-          overflow: 'hidden',
-          overflowX: 'hidden',
-          overflowY: 'hidden',
+          height: fullHeight ? 'auto' : (compact ? '500px' : '500px'),
+          maxHeight: fullHeight ? 'none' : (compact ? '500px' : '500px'),
+          minHeight: fullHeight ? '600px' : (compact ? '500px' : '500px'),
+          overflow: fullHeight ? 'visible' : 'hidden',
+          overflowX: fullHeight ? 'visible' : 'hidden',
+          overflowY: fullHeight ? 'visible' : 'hidden',
           zIndex: 1,
           position: 'relative'
         }}

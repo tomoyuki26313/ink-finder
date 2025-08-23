@@ -23,6 +23,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [styles, setStyles] = useState<Style[]>(availableStyles)
   const [motifs, setMotifs] = useState<Motif[]>(availableMotifs)
+  const [isDesktop, setIsDesktop] = useState(false)
 
   // Load styles and motifs if not provided
   useEffect(() => {
@@ -137,6 +138,17 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
     }
   }
 
+  // Detect screen size for responsive behavior
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768) // md breakpoint
+    }
+    
+    checkIsDesktop()
+    window.addEventListener('resize', checkIsDesktop)
+    
+    return () => window.removeEventListener('resize', checkIsDesktop)
+  }, [])
 
   // Handle Escape key to close modal and process Instagram embeds
   useEffect(() => {
@@ -145,6 +157,10 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
         onClose()
       }
     }
+
+    // Prevent body scroll when modal is open
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     document.addEventListener('keydown', handleEscapeKey)
     
@@ -157,6 +173,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
     
     return () => {
       document.removeEventListener('keydown', handleEscapeKey)
+      document.body.style.overflow = originalOverflow
       clearTimeout(timer)
     }
   }, [onClose, currentImageIndex])
@@ -166,7 +183,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto flex flex-col">
         <div className="relative">
           <button
             onClick={onClose}
@@ -176,9 +193,9 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
             <X className="w-5 h-5 text-slate-800" />
           </button>
 
-          <div className="grid md:grid-cols-2 h-full">
+          <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-[3fr_2fr] min-h-0 flex-1">
             <div 
-              className="relative h-[450px] md:h-[650px] bg-gradient-to-br from-slate-100 to-slate-200" 
+              className="relative h-[400px] md:h-auto md:min-h-[700px] bg-gradient-to-br from-slate-100 to-slate-200 flex-shrink-0" 
               style={{ 
                 zIndex: 2, 
                 overflow: 'hidden',
@@ -189,29 +206,34 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
               {validImages.length > 0 ? (
                 <>
                   <div 
-                    className="relative w-full h-full flex justify-center pt-4"
+                    className="relative w-full h-full flex justify-center pt-4 pb-4 overflow-y-auto"
                     style={{
-                      overflow: 'hidden',
-                      overflowX: 'hidden',
-                      overflowY: 'hidden',
-                      height: '100%',
-                      maxHeight: '100%'
+                      overflowX: 'hidden'
                     }}
                   >
                     <div 
-                      className="w-full max-w-sm"
-                      style={{
-                        overflow: 'hidden',
-                        maxHeight: '100%'
-                      }}
+                      className="w-full max-w-md px-4"
                     >
-                      <InstagramEmbed 
-                        key={validImages[currentImageIndex]} 
-                        postUrl={validImages[currentImageIndex]} 
-                        className="w-full"
-                        priority={true}
-                        compact={true}
-                      />
+                      <div 
+                        style={{
+                          overflow: 'hidden',
+                          borderRadius: '8px',
+                          position: 'relative'
+                        }}
+                      >
+                        <InstagramEmbed 
+                          key={validImages[currentImageIndex]} 
+                          postUrl={validImages[currentImageIndex]} 
+                          className="w-full"
+                          priority={true}
+                          compact={!isDesktop}
+                          fullHeight={isDesktop}
+                          style={{
+                            marginTop: '-54px',
+                            paddingTop: '54px'
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -262,7 +284,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
               )}
             </div>
 
-            <div className="p-6 md:p-8 overflow-y-auto max-h-[90vh] md:max-h-[650px]">
+            <div className="p-6 md:p-8 overflow-y-auto flex-1 md:min-h-0">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-slate-800 mb-1">{getLocalizedField(artist, 'name', language)}</h2>
                 <div className="flex items-center gap-4 text-sm text-slate-800">
