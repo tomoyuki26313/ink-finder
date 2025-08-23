@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Eye, Building2, Users, Globe, Clock, Upload, ArrowUpDown, ArrowUp, ArrowDown, Palette, Sparkles } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Building2, Users, Globe, Clock, Upload, ArrowUpDown, ArrowUp, ArrowDown, Palette, Sparkles, FileText } from 'lucide-react'
 import { Artist, Studio, Style, Motif } from '@/types/database'
+import { BlogPost } from '@/types/blog'
 import { getStoredArtists, saveArtists } from '@/lib/dataStore'
 import { fetchArtists, createStudio, updateStudio, deleteStudio } from '@/lib/api'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -10,15 +11,12 @@ import ArtistForm from '@/components/admin/ArtistForm'
 import StudioForm from '@/components/admin/StudioForm'
 import StyleForm from '@/components/admin/StyleForm'
 import MotifForm from '@/components/admin/MotifForm'
-import DesignSystemManager from '@/components/admin/DesignSystemManager'
+import BlogForm from '@/components/admin/BlogForm'
 import ArtistPreview from '@/components/admin/ArtistPreview'
 import DataManager from '@/components/admin/DataManager'
-import CrawlDashboard from '@/components/admin/CrawlDashboard'
-import ArtistReview from '@/components/admin/ArtistReview'
-import DeploymentDashboard from '@/components/admin/DeploymentDashboard'
 import InstagramEmbed from '@/components/InstagramEmbed'
 
-type TabType = 'artists' | 'studios' | 'styles' | 'motifs' | 'design' | 'crawling' | 'review' | 'deploy'
+type TabType = 'artists' | 'studios' | 'styles' | 'motifs' | 'blog'
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>('artists')
@@ -26,11 +24,13 @@ export default function AdminPage() {
   const [studios, setStudios] = useState<Studio[]>([])
   const [styles, setStyles] = useState<Style[]>([])
   const [motifs, setMotifs] = useState<Motif[]>([])
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingArtist, setEditingArtist] = useState<Artist | null>(null)
   const [editingStudio, setEditingStudio] = useState<Studio | null>(null)
   const [editingStyle, setEditingStyle] = useState<Style | null>(null)
   const [editingMotif, setEditingMotif] = useState<Motif | null>(null)
+  const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null)
   const [previewArtist, setPreviewArtist] = useState<Artist | null>(null)
   
   // Sorting state for artists
@@ -140,6 +140,7 @@ export default function AdminPage() {
     loadStudios()
     loadStyles()
     loadMotifs()
+    loadBlogPosts()
     initializeCrawler()
   }, [])
   
@@ -249,6 +250,20 @@ export default function AdminPage() {
     } catch (error) {
       console.error('❌ Error loading motifs:', error)
       setMotifs([])
+    }
+  }
+
+  const loadBlogPosts = async () => {
+    try {
+      const response = await fetch('/api/blog')
+      if (response.ok) {
+        const posts = await response.json()
+        setBlogPosts(posts)
+        console.log(`📝 Loaded ${posts.length} blog posts`)
+      }
+    } catch (error) {
+      console.error('❌ Error loading blog posts:', error)
+      setBlogPosts([])
     }
   }
   
@@ -540,27 +555,106 @@ export default function AdminPage() {
     }
   }
 
+  const handleSaveBlogPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at' | 'view_count'>) => {
+    try {
+      if (editingBlogPost) {
+        // Update existing blog post
+        const response = await fetch('/api/blog', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...postData, id: editingBlogPost.id })
+        })
+        
+        if (response.ok) {
+          console.log('✅ Blog post updated')
+          await loadBlogPosts()
+        } else {
+          throw new Error('Failed to update blog post')
+        }
+      } else {
+        // Create new blog post
+        const response = await fetch('/api/blog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(postData)
+        })
+        
+        if (response.ok) {
+          console.log('✅ Blog post created')
+          await loadBlogPosts()
+        } else {
+          throw new Error('Failed to create blog post')
+        }
+      }
+      
+      setShowForm(false)
+      setEditingBlogPost(null)
+    } catch (error: any) {
+      console.error('Error saving blog post:', error)
+      alert(`Error saving blog post: ${error.message || 'Unknown error'}`)
+    }
+  }
+
+  const handleEditBlogPost = (post: BlogPost) => {
+    setEditingBlogPost(post)
+    setEditingArtist(null)
+    setEditingStudio(null)
+    setEditingStyle(null)
+    setEditingMotif(null)
+    setShowForm(true)
+  }
+
+  const handleDeleteBlogPost = async (id: string) => {
+    if (confirm('Are you sure you want to delete this blog post?')) {
+      try {
+        const response = await fetch(`/api/blog?id=${id}`, {
+          method: 'DELETE'
+        })
+        
+        if (response.ok) {
+          console.log('✅ Blog post deleted successfully')
+          await loadBlogPosts()
+        } else {
+          alert('Failed to delete blog post')
+        }
+      } catch (error: any) {
+        console.error('Error deleting blog post:', error)
+        alert(`Error deleting blog post: ${error.message || 'Unknown error'}`)
+      }
+    }
+  }
+
   const handleAddNew = () => {
     if (activeTab === 'artists') {
       setEditingArtist(null)
       setEditingStudio(null)
       setEditingStyle(null)
       setEditingMotif(null)
+      setEditingBlogPost(null)
     } else if (activeTab === 'studios') {
       setEditingStudio(null)
       setEditingArtist(null)
       setEditingStyle(null)
       setEditingMotif(null)
+      setEditingBlogPost(null)
     } else if (activeTab === 'styles') {
       setEditingStyle(null)
       setEditingArtist(null)
       setEditingStudio(null)
       setEditingMotif(null)
+      setEditingBlogPost(null)
     } else if (activeTab === 'motifs') {
       setEditingMotif(null)
       setEditingArtist(null)
       setEditingStudio(null)
       setEditingStyle(null)
+      setEditingBlogPost(null)
+    } else if (activeTab === 'blog') {
+      setEditingBlogPost(null)
+      setEditingArtist(null)
+      setEditingStudio(null)
+      setEditingStyle(null)
+      setEditingMotif(null)
     }
     setShowForm(true)
   }
@@ -571,6 +665,7 @@ export default function AdminPage() {
     setEditingStudio(null)
     setEditingStyle(null)
     setEditingMotif(null)
+    setEditingBlogPost(null)
   }
 
   const getStudioName = (studioId: string) => {
@@ -1063,7 +1158,7 @@ export default function AdminPage() {
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs') && (
+          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs' || activeTab === 'blog') && (
             <button
               onClick={handleAddNew}
               className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
@@ -1078,13 +1173,13 @@ export default function AdminPage() {
       <div className="hidden lg:block p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
-          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs') && (
+          {(activeTab === 'artists' || activeTab === 'studios' || activeTab === 'styles' || activeTab === 'motifs' || activeTab === 'blog') && (
             <button
               onClick={handleAddNew}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Add New {activeTab === 'artists' ? 'Artist' : activeTab === 'studios' ? 'Studio' : activeTab === 'styles' ? 'Style' : 'デザイン'}
+              Add New {activeTab === 'artists' ? 'Artist' : activeTab === 'studios' ? 'Studio' : activeTab === 'styles' ? 'Style' : activeTab === 'motifs' ? 'デザイン' : 'Blog Post'}
             </button>
           )}
         </div>
@@ -1136,48 +1231,15 @@ export default function AdminPage() {
             モチーフ ({motifs.length})
           </button>
           <button
-            onClick={() => setActiveTab('design')}
+            onClick={() => setActiveTab('blog')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'design'
+              activeTab === 'blog'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <Palette className="w-4 h-4" />
-            デザインシステム
-          </button>
-          <button
-            onClick={() => setActiveTab('crawling')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'crawling'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Globe className="w-4 h-4" />
-            Crawling
-          </button>
-          <button
-            onClick={() => setActiveTab('review')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'review'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            Review ({pendingArtists.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('deploy')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'deploy'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Upload className="w-4 h-4" />
-            Deploy
+            <FileText className="w-4 h-4" />
+            Blog ({blogPosts.length})
           </button>
         </div>
 
@@ -1203,6 +1265,12 @@ export default function AdminPage() {
                 <StyleForm
                   style={editingStyle}
                   onSave={handleSaveStyle}
+                  onCancel={handleCloseForm}
+                />
+              ) : activeTab === 'blog' ? (
+                <BlogForm
+                  post={editingBlogPost}
+                  onSave={handleSaveBlogPost}
                   onCancel={handleCloseForm}
                 />
               ) : (
@@ -1803,162 +1871,104 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Design System Tab */}
-        {activeTab === 'design' && (
-          <DesignSystemManager />
-        )}
-
-        {/* Crawling Tab */}
-        {activeTab === 'crawling' && (
-          <CrawlDashboard
-            stats={crawlStats}
-            currentProgress={currentProgress}
-            onStartCrawl={handleStartCrawl}
-            onStopCrawl={handleStopCrawl}
-            onRunMonthlyCrawl={handleRunMonthlyCrawl}
-          />
-        )}
-
-        {/* Review Tab */}
-        {activeTab === 'review' && (
-          <ArtistReview
-            pendingArtists={pendingArtists}
-            onApprove={handleApproveArtist}
-            onReject={handleRejectArtist}
-            onBulkApprove={handleBulkApprove}
-            onBulkReject={handleBulkReject}
-          />
-        )}
-
-        {/* Deploy Tab */}
-        {activeTab === 'deploy' && (
-          <>
-            {/* Database Migration Status */}
-            {isSupabaseConfigured && (
-              <div className="mb-8 p-6 bg-white rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Database Schema Status</h3>
-                
-                {migrationStatus.checking ? (
-                  <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    <span className="text-gray-600">Checking database schema...</span>
-                  </div>
-                ) : migrationStatus.needed ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                      <div className="flex-1">
-                        <p className="font-bold text-red-800 text-lg">⚠️ CRITICAL: Database migration required</p>
-                        <p className="text-sm text-red-700 font-medium">
-                          Artist creation/editing will fail until this is resolved!
-                        </p>
-                        <p className="text-sm text-red-600 mt-1">
-                          Missing columns: {migrationStatus.missingColumns.join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                      <p className="font-medium text-gray-900 mb-2">Migration Instructions:</p>
-                      <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1 mb-4">
-                        <li>Go to your Supabase project dashboard</li>
-                        <li>Navigate to SQL Editor</li>
-                        <li>Copy and paste the SQL below</li>
-                        <li>Click "Run" to execute the migration</li>
-                        <li>Refresh this page to verify the migration</li>
-                      </ol>
-                      
-                      {migrationStatus.migrationSQL && (
-                        <div className="mt-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Migration SQL:
-                          </label>
-                          <textarea
-                            readOnly
-                            value={migrationStatus.migrationSQL}
-                            className="w-full h-32 p-3 font-mono text-xs bg-white border border-gray-300 rounded"
-                          />
+        {/* Blog Tab */}
+        {activeTab === 'blog' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Blog Posts ({blogPosts.length})
+              </h2>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Author
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Created Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {blogPosts.map((post) => (
+                    <tr key={post.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 mb-1">
+                            {post.title_en}
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            {post.title_ja}
+                          </div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            /{post.slug}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full capitalize">
+                          {post.category.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          post.published 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {post.published ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {post.author}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-700">
+                          {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => navigator.clipboard.writeText(migrationStatus.migrationSQL || '')}
-                            className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                            onClick={() => handleEditBlogPost(post)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Edit"
                           >
-                            Copy SQL
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBlogPost(post.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      )}
-                    </div>
-                    
-                    <button
-                      onClick={checkMigrationStatus}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Recheck Schema
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium text-green-800">Database schema is up to date</p>
-                      <p className="text-sm text-green-700">All required columns are present.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* RLS Policy Fix Section */}
-            {isSupabaseConfigured && (
-              <div className="mb-8 p-6 bg-white rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Row Level Security (RLS) Policy Fix</h3>
-                
-                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-sm text-orange-800">
-                    <strong>⚠️ If you're getting "violates row-level security policy" errors:</strong>
-                  </p>
-                  <p className="text-xs text-orange-700 mt-1">
-                    Click the button below to get SQL that fixes the RLS policies to allow public access.
-                  </p>
-                </div>
-
-                <button
-                  onClick={checkRlsPolicyFix}
-                  disabled={rlsFixStatus.checking}
-                  className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 mb-4"
-                >
-                  {rlsFixStatus.checking ? 'Generating...' : 'Get RLS Policy Fix SQL'}
-                </button>
-
-                {rlsFixStatus.needed && rlsFixStatus.fixSQL && (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="font-medium text-gray-900 mb-2">RLS Policy Fix SQL:</p>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Execute this in your Supabase SQL Editor to fix permissions:
-                    </p>
-                    
-                    <textarea
-                      readOnly
-                      value={rlsFixStatus.fixSQL}
-                      className="w-full h-40 p-3 font-mono text-xs bg-white border border-gray-300 rounded"
-                    />
-                    <button
-                      onClick={() => navigator.clipboard.writeText(rlsFixStatus.fixSQL || '')}
-                      className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                    >
-                      Copy SQL
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <DeploymentDashboard
-              localArtists={artists}
-              localStudios={studios}
-              onSyncToProduction={handleSyncToProduction}
-              onSyncStudiosToProduction={handleSyncStudiosToProduction}
-            />
-          </>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         {activeTab === 'artists' && (
@@ -2020,31 +2030,15 @@ export default function AdminPage() {
             <span className="text-xs">デザイン</span>
           </button>
           <button
-            onClick={() => setActiveTab('crawling')}
+            onClick={() => setActiveTab('blog')}
             className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
-              activeTab === 'crawling'
+              activeTab === 'blog'
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Globe className="w-5 h-5" />
-            <span className="text-xs">Crawling</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('review')}
-            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
-              activeTab === 'review'
-                ? 'text-blue-600 relative'
-                : 'text-gray-500'
-            }`}
-          >
-            <Clock className="w-5 h-5" />
-            <span className="text-xs">Review</span>
-            {pendingArtists.length > 0 && (
-              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {pendingArtists.length}
-              </div>
-            )}
+            <FileText className="w-5 h-5" />
+            <span className="text-xs">Blog</span>
           </button>
         </div>
       </div>

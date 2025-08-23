@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OG Image Converter</title>
+</head>
+<body>
+    <h1>OG Image Generator</h1>
+    <canvas id="canvas" width="1200" height="630"></canvas>
+    <br>
+    <button onclick="downloadImage()">Download OG Image</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient
+        const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+        gradient.addColorStop(0, '#667eea');
+        gradient.addColorStop(1, '#764ba2');
+        
+        // Fill background
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1200, 630);
+        
+        // Add pattern overlay
+        ctx.globalAlpha = 0.1;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 0.5;
+        for(let i = -1200; i < 1200; i += 50) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i + 630, 630);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        
+        // Add decorative emojis with transparency
+        ctx.globalAlpha = 0.1;
+        ctx.font = '80px Arial';
+        ctx.fillStyle = 'white';
+        ctx.save();
+        ctx.translate(100, 100);
+        ctx.rotate(-15 * Math.PI / 180);
+        ctx.fillText('🎨', 0, 0);
+        ctx.restore();
+        
+        ctx.font = '60px Arial';
+        ctx.save();
+        ctx.translate(150, 500);
+        ctx.rotate(20 * Math.PI / 180);
+        ctx.fillText('✨', 0, 0);
+        ctx.restore();
+        
+        ctx.font = '70px Arial';
+        ctx.save();
+        ctx.translate(1000, 150);
+        ctx.rotate(-10 * Math.PI / 180);
+        ctx.fillText('🖋️', 0, 0);
+        ctx.restore();
+        
+        ctx.font = '90px Arial';
+        ctx.save();
+        ctx.translate(950, 480);
+        ctx.rotate(15 * Math.PI / 180);
+        ctx.fillText('🌸', 0, 0);
+        ctx.restore();
+        
+        ctx.globalAlpha = 1;
+        
+        // Add shadow for text
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 30;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 10;
+        
+        // Main title
+        ctx.font = 'bold 100px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.fillText('Ink Finder', 600, 250);
+        
+        // Remove shadow for subtitles
+        ctx.shadowColor = 'transparent';
+        
+        // Japanese tagline
+        ctx.globalAlpha = 0.95;
+        ctx.font = '32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText('日本のタトゥーアーティストを見つけよう', 600, 330);
+        
+        // English tagline
+        ctx.globalAlpha = 0.9;
+        ctx.font = '26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText('Discover Tattoo Artists in Japan', 600, 380);
+        
+        // Bottom icons
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(1050, 550, 25, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(1100, 550, 25, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(1150, 550, 25, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.globalAlpha = 1;
+        ctx.font = '24px Arial';
+        ctx.fillText('📍', 1050, 558);
+        ctx.fillText('🔍', 1100, 558);
+        ctx.fillText('🎨', 1150, 558);
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'og-image.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+    </script>
+</body>
+</html>

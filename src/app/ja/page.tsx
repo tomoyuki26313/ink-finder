@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link'
 import { MapPin, Loader2, Database } from 'lucide-react'
 import ArtistCard from '@/components/ArtistCard'
 import ArtistModal from '@/components/ArtistModal'
@@ -283,7 +284,13 @@ export default function Home() {
         {/* Desktop Layout */}
         <div className="hidden md:block">
           <div className="max-w-[1261px] mx-auto px-4 relative py-6">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center gap-4">
+              <Link
+                href="/ja/blog"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                ブログ
+              </Link>
               <LanguageToggle />
             </div>
             <div className="flex flex-col items-center justify-center">
@@ -300,7 +307,13 @@ export default function Home() {
         {/* Mobile Layout */}
         <div className="block md:hidden">
           <div className="w-full px-4 relative py-4">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <Link
+                href="/ja/blog"
+                className="px-3 py-1 text-xs font-medium text-gray-700 hover:text-black transition-colors bg-gray-100 rounded hover:bg-gray-200"
+              >
+                ブログ
+              </Link>
               <LanguageToggle />
             </div>
             <div className="flex flex-col items-center justify-center">

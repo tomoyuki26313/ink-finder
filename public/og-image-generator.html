@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, height=630">
+    <title>Ink Finder OG Image</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 1200px;
+            height: 630px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
+        }
+        
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 60px;
+        }
+        
+        .logo {
+            font-size: 120px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            letter-spacing: -5px;
+        }
+        
+        .tagline-ja {
+            font-size: 36px;
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 500;
+            opacity: 0.95;
+        }
+        
+        .tagline-en {
+            font-size: 28px;
+            color: white;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .icons {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        
+        .tattoo-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .element {
+            position: absolute;
+            opacity: 0.1;
+            color: white;
+        }
+        
+        .element-1 {
+            top: 50px;
+            left: 100px;
+            font-size: 80px;
+            transform: rotate(-15deg);
+        }
+        
+        .element-2 {
+            bottom: 80px;
+            left: 150px;
+            font-size: 60px;
+            transform: rotate(20deg);
+        }
+        
+        .element-3 {
+            top: 100px;
+            right: 120px;
+            font-size: 70px;
+            transform: rotate(-10deg);
+        }
+        
+        .element-4 {
+            bottom: 100px;
+            right: 100px;
+            font-size: 90px;
+            transform: rotate(15deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="pattern"></div>
+    
+    <div class="tattoo-elements">
+        <div class="element element-1">🎨</div>
+        <div class="element element-2">✨</div>
+        <div class="element element-3">🖋️</div>
+        <div class="element element-4">🌸</div>
+    </div>
+    
+    <div class="container">
+        <div class="logo">Ink Finder</div>
+        <div class="tagline-ja">日本のタトゥーアーティストを見つけよう</div>
+        <div class="tagline-en">Discover Tattoo Artists in Japan</div>
+    </div>
+    
+    <div class="icons">
+        <div class="icon">📍</div>
+        <div class="icon">🔍</div>
+        <div class="icon">🎨</div>
+    </div>
+</body>
+</html>
