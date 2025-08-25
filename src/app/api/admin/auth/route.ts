@@ -12,6 +12,14 @@ export async function POST(request: Request) {
     // Get admin password from environment variable
     const adminPassword = process.env.ADMIN_PASSWORD
     
+    // Debug logging (remove in production)
+    console.log('Auth attempt:', {
+      receivedPassword: password ? `${password.substring(0, 3)}...` : 'none',
+      hasEnvPassword: !!adminPassword,
+      envPasswordLength: adminPassword?.length || 0,
+      envPasswordStart: adminPassword ? `${adminPassword.substring(0, 3)}...` : 'none'
+    })
+    
     if (!adminPassword) {
       console.error('ADMIN_PASSWORD not configured')
       return NextResponse.json({ error: 'Admin not configured' }, { status: 500 })
@@ -19,6 +27,11 @@ export async function POST(request: Request) {
     
     // Check password
     if (password !== adminPassword) {
+      console.log('Password mismatch:', {
+        received: password,
+        expected: adminPassword,
+        match: password === adminPassword
+      })
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
     }
     
