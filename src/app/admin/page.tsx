@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import AdminLogin from '@/components/admin/AdminLogin'
 import { Plus, Edit, Trash2, Eye, Building2, Users, Globe, Clock, Upload, ArrowUpDown, ArrowUp, ArrowDown, Palette, Sparkles, FileText } from 'lucide-react'
 import { Artist, Studio, Style, Motif } from '@/types/database'
 import { BlogPost } from '@/types/blog'
@@ -19,6 +20,7 @@ import InstagramEmbed from '@/components/InstagramEmbed'
 type TabType = 'artists' | 'studios' | 'styles' | 'motifs' | 'blog'
 
 export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('artists')
   const [artists, setArtists] = useState<Artist[]>([])
   const [studios, setStudios] = useState<Studio[]>([])
@@ -121,8 +123,26 @@ export default function AdminPage() {
     }
   ])
 
-  // Load data on mount and initialize crawler
+  // Check authentication status on load
   useEffect(() => {
+    checkAuth()
+  }, [])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/admin/auth')
+      const data = await response.json()
+      setIsAuthenticated(data.authenticated)
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      setIsAuthenticated(false)
+    }
+  }
+
+  // Load data on mount and initialize crawler (only when authenticated)
+  useEffect(() => {
+    if (!isAuthenticated) return
+    
     // Clean up old UUID-based studios from localStorage to prevent type mismatch errors
     if (typeof window !== 'undefined') {
       const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
@@ -142,7 +162,7 @@ export default function AdminPage() {
     loadMotifs()
     loadBlogPosts()
     initializeCrawler()
-  }, [])
+  }, [isAuthenticated])
   
   const initializeCrawler = async () => {
     try {
@@ -1150,6 +1170,20 @@ export default function AdminPage() {
       }))
       throw error
     }
+  }
+
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <AdminLogin onSuccess={() => setIsAuthenticated(true)} />
   }
 
   return (

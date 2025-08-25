@@ -117,7 +117,7 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       studio_id: null,  // Default to no studio selected
       instagram_handle: '',
       instagram_follower_count: 0,
-      images: ['', '', ''],
+      images: ['', '', ''], // Start with 3 empty slots, can expand to 10
       // Artist-specific features
       female_artist: false,
       beginner_friendly: false,
@@ -398,6 +398,32 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
   const moveImageDown = (index: number) => {
     if (index < formData.images.length - 1) {
       moveImage(index, index + 1)
+    }
+  }
+
+  // Add new empty image field (max 10)
+  const addImageField = () => {
+    if (formData.images.length < 10) {
+      setFormData(prev => ({ ...prev, images: [...prev.images, ''] }))
+    }
+  }
+
+  // Remove image field
+  const removeImageField = (index: number) => {
+    if (formData.images.length > 1) { // Keep at least 1 field
+      const newImages = formData.images.filter((_, i) => i !== index)
+      setFormData(prev => ({ ...prev, images: newImages }))
+      
+      // Also remove associated styles and motifs
+      const updatedImageStyles = { ...imageStyles }
+      const updatedImageMotifs = { ...imageMotifs }
+      const imageUrl = formData.images[index]
+      if (imageUrl) {
+        delete updatedImageStyles[imageUrl]
+        delete updatedImageMotifs[imageUrl]
+      }
+      setImageStyles(updatedImageStyles)
+      setImageMotifs(updatedImageMotifs)
     }
   }
 
@@ -752,6 +778,17 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
                     >
                       <ChevronDown className="w-5 h-5" />
                     </button>
+                    {/* Delete button */}
+                    {formData.images.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeImageField(index)}
+                        className="p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation text-red-600 hover:text-red-700 hover:bg-red-50 active:bg-red-100"
+                        title="Remove this image"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="mb-3">
@@ -853,6 +890,23 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
               </div>
             ))}
           </div>
+          
+          {/* Add Instagram Post button */}
+          {formData.images.length < 10 && (
+            <button
+              type="button"
+              onClick={addImageField}
+              className="mt-4 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 flex items-center gap-2 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Instagram Post ({formData.images.length}/10)
+            </button>
+          )}
+          
+          {formData.images.length >= 10 && (
+            <p className="mt-4 text-sm text-gray-500">Maximum of 10 Instagram posts reached</p>
+          )}
+          
           <div className="mt-2 text-xs text-gray-700">
             <strong>How to get Instagram post URL:</strong> Go to the Instagram post → Click "..." → "Copy link"
           </div>
