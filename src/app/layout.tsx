@@ -124,7 +124,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} ${roboto.variable} antialiased`}
       >
-        <GoogleAnalytics />
+        {/* Temporarily disable Google Analytics to fix admin panel */}
+        {/* <GoogleAnalytics /> */}
         <LanguageProvider>
           {children}
         </LanguageProvider>
