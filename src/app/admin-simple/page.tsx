@@ -267,7 +267,7 @@ export default function SimpleAdminPage() {
           </form>
           
           <div className="help-text">
-            Try: test123, debug123, or Tomoyuchi26313
+            Admin access required
           </div>
         </div>
       </div>
