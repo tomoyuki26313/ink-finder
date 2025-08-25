@@ -26,6 +26,11 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',
   description: 'Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.',
@@ -124,8 +129,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} ${roboto.variable} antialiased`}
       >
-        {/* Temporarily disable Google Analytics to fix admin panel */}
-        {/* <GoogleAnalytics /> */}
+        <GoogleAnalytics />
         <LanguageProvider>
           {children}
         </LanguageProvider>

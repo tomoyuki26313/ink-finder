@@ -2077,9 +2077,388 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Mobile Main Content Area */}
-      <div className="lg:hidden p-4">
-        {/* All content from artists tab onwards will be duplicated here for mobile */}
+      {/* Mobile Content Area */}
+      <div className="lg:hidden p-4 pb-20">
+        {showForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-full w-full max-h-[90vh] overflow-auto">
+              {activeTab === 'artists' ? (
+                <ArtistForm
+                  artist={editingArtist}
+                  studios={studios}
+                  onSave={handleSaveArtist}
+                  onCancel={handleCloseForm}
+                />
+              ) : activeTab === 'studios' ? (
+                <StudioForm
+                  studio={editingStudio}
+                  onSave={handleSaveStudio}
+                  onCancel={handleCloseForm}
+                />
+              ) : activeTab === 'styles' ? (
+                <StyleForm
+                  style={editingStyle}
+                  onSave={handleSaveStyle}
+                  onCancel={handleCloseForm}
+                />
+              ) : activeTab === 'blog' ? (
+                <BlogForm
+                  post={editingBlogPost}
+                  onSave={handleSaveBlogPost}
+                  onCancel={handleCloseForm}
+                />
+              ) : (
+                <MotifForm
+                  motif={editingMotif}
+                  onSave={handleSaveMotif}
+                  onCancel={handleCloseForm}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {previewArtist && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-full w-full max-h-[90vh] overflow-auto">
+              <ArtistPreview
+                artist={previewArtist}
+                onClose={() => setPreviewArtist(null)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Artists Tab */}
+        {activeTab === 'artists' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Artists ({artists.length})
+              </h2>
+            </div>
+            
+            <div>
+              {sortedArtists.map((artist) => (
+                <div key={artist.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {artist.name || artist.name_en || 'No name'}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {artist.location || artist.name_ja || 'No location'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getStudioName(artist.studio_id)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => setPreviewArtist(artist)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditArtist(artist)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteArtist(artist.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Styles */}
+                  {(artist.style_ids || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {(artist.style_ids || []).slice(0, 3).map((styleId, index) => {
+                        const style = styles.find(s => s.id === styleId)
+                        const styleName = style ? style.style_name_ja : `Style ${styleId}`
+                        return (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                          >
+                            {styleName}
+                          </span>
+                        )
+                      })}
+                      {(artist.style_ids || []).length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          +{(artist.style_ids || []).length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Images */}
+                  {(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {(artist.instagram_posts || artist.images || [])
+                        .filter(img => img && img.trim() !== '')
+                        .slice(0, 3)
+                        .map((imgUrl, index) => (
+                        <div 
+                          key={index}
+                          className="w-16 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded flex-shrink-0 border border-gray-300 overflow-hidden"
+                        >
+                          <InstagramEmbed 
+                            postUrl={imgUrl}
+                            className="w-full h-full object-cover"
+                            compact={true}
+                          />
+                        </div>
+                      ))}
+                      {(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length > 3 && (
+                        <div className="w-16 h-20 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
+                          <span className="text-xs text-gray-600">
+                            +{(artist.instagram_posts || artist.images || []).filter(img => img && img.trim() !== '').length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Instagram Handle */}
+                  {artist.instagram_handle && (
+                    <div className="mt-2">
+                      <span className="text-xs text-gray-600">Instagram: </span>
+                      <a 
+                        href={`https://instagram.com/${artist.instagram_handle.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        @{artist.instagram_handle.replace('@', '')}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Studios Tab */}
+        {activeTab === 'studios' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Studios ({studios.length})
+              </h2>
+            </div>
+            
+            <div>
+              {sortedStudios.map((studio) => {
+                const studioArtists = artists.filter(artist => artist.studio_id === studio.id)
+                return (
+                  <div key={studio.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="text-base font-medium text-gray-900">
+                          {studio.name_en}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {studio.name_ja}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {studio.location}
+                        </p>
+                        <div className="flex gap-4 mt-2 text-xs text-gray-600">
+                          <span>{studioArtists.length} artist{studioArtists.length !== 1 ? 's' : ''}</span>
+                          <span>{studio.view_count.toLocaleString()} views</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-3">
+                        <button
+                          onClick={() => handleEditStudio(studio)}
+                          className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStudio(studio.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Styles Tab */}
+        {activeTab === 'styles' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Styles ({styles.length})
+              </h2>
+            </div>
+            
+            <div>
+              {styles.map((style) => (
+                <div key={style.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {style.style_name_ja}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {style.style_name_en}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        ID: #{style.id}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(style.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => handleEditStyle(style)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStyle(style.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Motifs Tab */}
+        {activeTab === 'motifs' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                デザイン ({motifs.length})
+              </h2>
+            </div>
+            
+            <div>
+              {motifs.map((motif) => (
+                <div key={motif.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {motif.motif_name_ja}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {motif.motif_name_en}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        ID: #{motif.id}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(motif.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => handleEditMotif(motif)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMotif(motif.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Blog Tab */}
+        {activeTab === 'blog' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Blog Posts ({blogPosts.length})
+              </h2>
+            </div>
+            
+            <div>
+              {blogPosts.map((post) => (
+                <div key={post.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {post.title_en}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {post.title_ja}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
+                          {post.category.replace('-', ' ')}
+                        </span>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          post.published 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {post.published ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        By {post.author} • {new Date(post.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => handleEditBlogPost(post)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBlogPost(post.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'artists' && (
+          <div className="mt-6">
+            <DataManager 
+              artists={artists}
+              onImportArtists={handleImportArtists}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

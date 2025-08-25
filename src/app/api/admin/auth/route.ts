@@ -9,25 +9,17 @@ export async function POST(request: Request) {
   try {
     const { password } = await request.json()
     
-    // Simplified authentication - use hardcoded password for now
-    const validPasswords = ['test123', 'debug123', 'Tomoyuchi26313', process.env.ADMIN_PASSWORD]
+    // Use environment variable for admin password
+    const adminPassword = process.env.ADMIN_PASSWORD
     
-    // Debug logging 
-    console.log('Auth attempt:', {
-      received: password,
-      validPasswords: validPasswords.filter(Boolean),
-      envPassword: process.env.ADMIN_PASSWORD
-    })
-    
-    if (!validPasswords.some(p => p === password)) {
-      console.log('Password rejected:', password)
-      return NextResponse.json({ 
-        error: 'Invalid password', 
-        debug: { received: password, valid: validPasswords.filter(Boolean) } 
-      }, { status: 401 })
+    if (!adminPassword) {
+      console.error('ADMIN_PASSWORD environment variable not set')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
     
-    console.log('Password accepted:', password)
+    if (password !== adminPassword) {
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+    }
     
     // Generate session token
     const sessionToken = crypto.randomBytes(32).toString('hex')
