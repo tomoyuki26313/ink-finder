@@ -8,6 +8,11 @@ export function GoogleAnalytics() {
   if (!gaId || gaId === 'G-XXXXXXXXXX') {
     return null
   }
+
+  // Disable Google Analytics on admin pages to avoid conflicts
+  if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
+    return null
+  }
   
   return (
     <>
@@ -18,17 +23,16 @@ export function GoogleAnalytics() {
       <Script
         id="google-analytics"
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${gaId}', {
-              page_path: window.location.pathname,
-            });
-          `,
-        }}
-      />
+      >
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${gaId}', {
+            page_path: window.location.pathname,
+          });
+        `}
+      </Script>
     </>
   )
 }
