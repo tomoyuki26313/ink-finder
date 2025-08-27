@@ -328,7 +328,7 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
       </div>
 
       {/* Instagram Image Section - Moved to Bottom */}
-      <div className="relative h-80 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
+      <div className="relative h-96 md:h-80 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
         {validInstagramPosts.length > 0 ? (
           <div className="w-full h-full relative overflow-hidden">
             <div className="absolute inset-0" style={{ transform: 'scale(1.3) translateY(-10%)' }}>
