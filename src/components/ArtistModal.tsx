@@ -221,7 +221,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
 
           <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-[3fr_2fr] min-h-0 flex-1">
             <div 
-              className="relative h-[400px] md:h-auto md:min-h-[700px] bg-gradient-to-br from-slate-100 to-slate-200 flex-shrink-0" 
+              className="relative h-[500px] sm:h-[550px] md:h-auto md:min-h-[700px] bg-gradient-to-br from-slate-100 to-slate-200 flex-shrink-0" 
               style={{ 
                 zIndex: 2, 
                 overflow: 'hidden',
@@ -238,7 +238,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                     }}
                   >
                     <div 
-                      className="w-full max-w-md px-4"
+                      className="w-full px-2 sm:px-4 md:max-w-md"
                     >
                       <div 
                         style={{
