@@ -24,6 +24,15 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const [styles, setStyles] = useState<Style[]>(availableStyles)
   const [motifs, setMotifs] = useState<Motif[]>(availableMotifs)
   const [isDesktop, setIsDesktop] = useState(false)
+  const [embedKey, setEmbedKey] = useState(0)
+
+  // Force re-render on mount to ensure proper Instagram embed sizing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEmbedKey(prev => prev + 1)
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Load styles and motifs if not provided
   useEffect(() => {
@@ -125,10 +134,12 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   // Navigation handlers for carousel
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : validImages.length - 1))
+    setEmbedKey(prev => prev + 1) // Force re-render
   }
 
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => (prev < validImages.length - 1 ? prev + 1 : 0))
+    setEmbedKey(prev => prev + 1) // Force re-render
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -164,17 +175,32 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
 
     document.addEventListener('keydown', handleEscapeKey)
     
-    // Force Instagram embeds to process when modal opens
-    const timer = setTimeout(() => {
+    // Force Instagram embeds to process when modal opens or image changes
+    // Multiple timers to ensure proper rendering
+    const timer1 = setTimeout(() => {
+      if (typeof window !== 'undefined' && window.instgrm) {
+        window.instgrm.Embeds.process()
+      }
+    }, 100)
+    
+    const timer2 = setTimeout(() => {
       if (typeof window !== 'undefined' && window.instgrm) {
         window.instgrm.Embeds.process()
       }
     }, 500)
     
+    const timer3 = setTimeout(() => {
+      if (typeof window !== 'undefined' && window.instgrm) {
+        window.instgrm.Embeds.process()
+      }
+    }, 1000)
+    
     return () => {
       document.removeEventListener('keydown', handleEscapeKey)
       document.body.style.overflow = originalOverflow
-      clearTimeout(timer)
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+      clearTimeout(timer3)
     }
   }, [onClose, currentImageIndex])
 
@@ -222,7 +248,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
                         }}
                       >
                         <InstagramEmbed 
-                          key={validImages[currentImageIndex]} 
+                          key={`${validImages[currentImageIndex]}-${embedKey}`} 
                           postUrl={validImages[currentImageIndex]} 
                           className="w-full"
                           priority={true}

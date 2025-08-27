@@ -240,6 +240,11 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('🔧 ArtistForm: Form submission started')
+    console.log('🔧 ArtistForm: Form data:', formData)
+    console.log('🔧 ArtistForm: Selected studio_id:', formData.studio_id, 'Type:', typeof formData.studio_id)
+    console.log('🔧 ArtistForm: Available studios:', studios.map(s => ({ id: s.id, name: s.name_en || s.name_ja })))
+    
     if (!formData.name_ja.trim() && !formData.name_en.trim()) {
       alert('Please enter at least one artist name (Japanese or English)')
       return
@@ -274,11 +279,9 @@ export default function ArtistForm({ artist, studios, onSave, onCancel }: Artist
       )
     }
     
-    console.log('🔍 ArtistForm: Saving data with motifs:', {
-      imageMotifs,
-      filteredImageMotifs: cleanedData.image_motifs,
-      formImages: formData.images
-    })
+    console.log('🔧 ArtistForm: Cleaned data before saving:', cleanedData)
+    console.log('🔧 ArtistForm: Studio_id in cleaned data:', cleanedData.studio_id)
+    console.log('🔧 ArtistForm: Calling onSave with:', cleanedData)
 
     onSave(cleanedData)
   }

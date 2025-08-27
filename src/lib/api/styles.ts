@@ -82,7 +82,15 @@ export async function fetchStyles(): Promise<Style[]> {
     if (response.ok) {
       const data = await response.json()
       console.log('Fetched styles from API:', data.length)
+      
+      // Cache in localStorage for consistency
+      if (typeof window !== 'undefined' && data.length > 0) {
+        localStorage.setItem('ink-finder-styles-table', JSON.stringify(data))
+      }
+      
       return data
+    } else {
+      console.warn('API route returned non-OK status:', response.status)
     }
   } catch (error) {
     console.error('Error fetching styles from API:', error)
@@ -98,6 +106,12 @@ export async function fetchStyles(): Promise<Style[]> {
       
       if (!error && data) {
         console.log('Fetched styles from Supabase:', data.length)
+        
+        // Cache in localStorage for consistency
+        if (typeof window !== 'undefined' && data.length > 0) {
+          localStorage.setItem('ink-finder-styles-table', JSON.stringify(data))
+        }
+        
         return data
       }
     } catch (error) {
@@ -114,7 +128,12 @@ export async function fetchStyles(): Promise<Style[]> {
     }
   }
   
-  console.log('Using mock styles')
+  console.log('Using mock styles, saving to localStorage')
+  // Save mock styles to localStorage for consistency
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('ink-finder-styles-table', JSON.stringify(mockStyles))
+  }
+  
   return mockStyles
 }
 
@@ -237,6 +256,7 @@ export async function updateStyle(id: number, styleData: Partial<Omit<Style, 'id
     
     if (!response.ok) {
       const error = await response.json()
+      console.error('API route failed:', error)
       throw new Error(error.error || 'Failed to update style')
     }
     
@@ -255,10 +275,11 @@ export async function updateStyle(id: number, styleData: Partial<Omit<Style, 'id
     
     return data
   } catch (error: any) {
-    console.error('Error updating style:', error)
+    console.error('Error updating style via API, falling back to localStorage:', error)
     
     // Fallback to localStorage
     if (typeof window !== 'undefined') {
+      console.log('Using localStorage fallback for style update')
       const storedStyles = JSON.parse(localStorage.getItem('ink-finder-styles-table') || '[]')
       const allStyles = storedStyles.length > 0 ? storedStyles : [...mockStyles]
       

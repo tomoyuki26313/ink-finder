@@ -70,13 +70,17 @@ export default function InstagramEmbed({
       script.async = true
       script.src = 'https://www.instagram.com/embed.js'
       script.onload = () => {
-        // Wait a bit for the script to initialize
+        // Process embeds multiple times to ensure proper rendering
+        setTimeout(processEmbed, 100)
         setTimeout(processEmbed, 500)
+        setTimeout(processEmbed, 1000)
       }
       document.body.appendChild(script)
     } else {
-      // Script already loaded, process immediately
-      processEmbed()
+      // Script already loaded, process multiple times for reliability
+      setTimeout(processEmbed, 100)
+      setTimeout(processEmbed, 500)
+      setTimeout(processEmbed, 1000)
     }
 
     return () => {

@@ -15,17 +15,48 @@ export async function fetchStudios(): Promise<Studio[]> {
     return [...storedStudios].sort((a, b) => b.view_count - a.view_count)
   }
 
-  const { data, error } = await supabase!
-    .from('studios')
-    .select('*')
-    .order('view_count', { ascending: false })
-  
-  if (error) {
-    console.error('Error fetching studios:', error)
-    return []
+  try {
+    const { data, error } = await supabase!
+      .from('studios')
+      .select('*')
+      .order('view_count', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching studios from Supabase:', error)
+      throw error
+    }
+    
+    // Always check localStorage for additional data
+    const storedStudios = typeof window !== 'undefined' 
+      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      : []
+    
+    console.log(`Supabase returned ${data?.length || 0} studios`)
+    console.log(`localStorage contains ${storedStudios.length} studios`)
+    
+    // Combine both sources, with localStorage taking precedence for duplicates
+    const supabaseStudios = (data as Studio[]) || []
+    const allStudios = [...storedStudios]
+    
+    // Add Supabase studios that don't exist in localStorage
+    supabaseStudios.forEach(supabaseStudio => {
+      const existsInLocalStorage = storedStudios.some((localStudio: Studio) => 
+        localStudio.id === supabaseStudio.id
+      )
+      if (!existsInLocalStorage) {
+        allStudios.push(supabaseStudio)
+      }
+    })
+    
+    console.log(`Combined result: ${allStudios.length} studios`)
+    return allStudios.sort((a, b) => b.view_count - a.view_count)
+  } catch (error) {
+    console.error('Error fetching studios from Supabase, falling back to localStorage:', error)
+    const storedStudios = typeof window !== 'undefined' 
+      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      : []
+    return [...storedStudios].sort((a, b) => b.view_count - a.view_count)
   }
-  
-  return data as Studio[]
 }
 
 export async function fetchStudioById(id: string): Promise<Studio | null> {
@@ -52,123 +83,168 @@ export async function fetchStudioById(id: string): Promise<Studio | null> {
 }
 
 export async function createStudio(studioData: Omit<Studio, 'id' | 'created_at' | 'view_count'>): Promise<Studio | null> {
-  if (!isSupabaseConfigured) {
-    // Local mode - store in localStorage
-    const newStudio: Studio = {
-      ...studioData,
-      id: `studio-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      view_count: 0
+  // Try API route first (with service role key to bypass RLS)
+  try {
+    const response = await fetch('/api/studios', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(studioData)
+    })
+    
+    // Check if API route is unavailable (503 = Service Unavailable)
+    if (response.status === 503) {
+      console.log('API route unavailable (no service role key), using localStorage fallback')
+      throw new Error('API_UNAVAILABLE')
     }
     
-    const storedStudios = typeof window !== 'undefined' 
-      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
-      : []
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create studio')
+    }
     
-    const updatedStudios = [...storedStudios, newStudio]
+    const data = await response.json()
+    console.log('Studio created successfully via API:', data)
     
+    // Also update localStorage if it exists
     if (typeof window !== 'undefined') {
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      const updatedStudios = [...storedStudios, data]
       localStorage.setItem('ink-finder-studios', JSON.stringify(updatedStudios))
     }
     
-    return newStudio
+    return data
+  } catch (error: any) {
+    console.log('API route failed, using localStorage fallback:', error.message)
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const newStudio: Studio = {
+        ...studioData,
+        id: `studio-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        view_count: 0
+      }
+      
+      console.log('💾 Creating studio in localStorage:', newStudio)
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      console.log('💾 Current studios in localStorage:', storedStudios.length, storedStudios)
+      
+      const updatedStudios = [...storedStudios, newStudio]
+      localStorage.setItem('ink-finder-studios', JSON.stringify(updatedStudios))
+      console.log('💾 Updated studios saved to localStorage:', updatedStudios.length, updatedStudios)
+      
+      // Verify it was saved
+      const verifyStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      console.log('💾 Verification - studios in localStorage after save:', verifyStudios.length, verifyStudios)
+      
+      console.log('Studio created successfully via localStorage:', newStudio)
+      return newStudio
+    }
+    
+    throw new Error('Failed to create studio - no storage available')
   }
-
-  const { data, error } = await supabase!
-    .from('studios')
-    .insert(studioData)
-    .select()
-    .single()
-  
-  if (error) {
-    console.error('Error creating studio:', error)
-    console.error('Error details:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    })
-    throw new Error(error.message || error.details || error.hint || 'Failed to create studio')
-  }
-  
-  return data as Studio
 }
 
 export async function updateStudio(id: string | number, studioData: Partial<Omit<Studio, 'id' | 'created_at'>>): Promise<Studio | null> {
-  if (!isSupabaseConfigured) {
-    // Local mode - update in localStorage
-    const storedStudios = typeof window !== 'undefined' 
-      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
-      : []
+  // Try API route first (with service role key to bypass RLS)
+  try {
+    const response = await fetch('/api/studios', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, ...studioData })
+    })
     
-    const studioIndex = storedStudios.findIndex((s: Studio) => s.id === id)
-    if (studioIndex === -1) return null
-    
-    const updatedStudio = { ...storedStudios[studioIndex], ...studioData }
-    storedStudios[studioIndex] = updatedStudio
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ink-finder-studios', JSON.stringify(storedStudios))
+    // Check if API route is unavailable (503 = Service Unavailable)
+    if (response.status === 503) {
+      console.log('API route unavailable (no service role key), using localStorage fallback')
+      throw new Error('API_UNAVAILABLE')
     }
     
-    return updatedStudio
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update studio')
+    }
+    
+    const data = await response.json()
+    console.log('Studio updated successfully via API:', data)
+    
+    // Also update localStorage if it exists
+    if (typeof window !== 'undefined') {
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      const index = storedStudios.findIndex((s: Studio) => s.id === id)
+      if (index !== -1) {
+        storedStudios[index] = data
+        localStorage.setItem('ink-finder-studios', JSON.stringify(storedStudios))
+      }
+    }
+    
+    return data
+  } catch (error: any) {
+    console.log('API route failed, using localStorage fallback:', error.message)
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      const studioIndex = storedStudios.findIndex((s: Studio) => s.id === id)
+      if (studioIndex !== -1) {
+        const updatedStudio = { ...storedStudios[studioIndex], ...studioData }
+        storedStudios[studioIndex] = updatedStudio
+        localStorage.setItem('ink-finder-studios', JSON.stringify(storedStudios))
+        console.log('Studio updated successfully via localStorage:', updatedStudio)
+        return updatedStudio
+      }
+    }
+    
+    return null
   }
-
-  console.log('Updating studio with ID:', id, 'Type:', typeof id)
-  console.log('Studio data:', studioData)
-  
-  const { data, error } = await supabase!
-    .from('studios')
-    .update(studioData)
-    .eq('id', id)
-    .select()
-    .single()
-  
-  console.log('Update response:', { data, error })
-  
-  if (error) {
-    console.error('Error updating studio:', error)
-    console.error('Error details:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-      stack: error.stack
-    })
-    console.error('Full error object:', JSON.stringify(error, null, 2))
-    throw new Error(error.message || error.details || error.hint || 'Failed to update studio')
-  }
-  
-  return data as Studio
 }
 
 export async function deleteStudio(id: string): Promise<boolean> {
-  if (!isSupabaseConfigured) {
-    // Local mode - remove from localStorage
-    const storedStudios = typeof window !== 'undefined' 
-      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
-      : []
+  // Try API route first (with service role key to bypass RLS)
+  try {
+    const response = await fetch(`/api/studios?id=${id}`, {
+      method: 'DELETE'
+    })
     
-    const filteredStudios = storedStudios.filter((s: Studio) => s.id !== id)
+    // Check if API route is unavailable (503 = Service Unavailable)
+    if (response.status === 503) {
+      console.log('API route unavailable (no service role key), using localStorage fallback')
+      throw new Error('API_UNAVAILABLE')
+    }
     
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete studio')
+    }
+    
+    console.log('Studio deleted successfully via API')
+    
+    // Also remove from localStorage if it exists
     if (typeof window !== 'undefined') {
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      const filteredStudios = storedStudios.filter((s: Studio) => s.id !== id)
       localStorage.setItem('ink-finder-studios', JSON.stringify(filteredStudios))
     }
     
     return true
-  }
-
-  const { error } = await supabase!
-    .from('studios')
-    .delete()
-    .eq('id', id)
-  
-  if (error) {
-    console.error('Error deleting studio:', error)
+  } catch (error: any) {
+    console.log('API route failed, using localStorage fallback:', error.message)
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      const filteredStudios = storedStudios.filter((s: Studio) => s.id !== id)
+      localStorage.setItem('ink-finder-studios', JSON.stringify(filteredStudios))
+      console.log('Studio deleted successfully via localStorage')
+      return true
+    }
+    
     return false
   }
-  
-  return true
 }
 
 // Artist API functions (updated to work with studios)

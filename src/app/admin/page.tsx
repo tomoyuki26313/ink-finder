@@ -146,12 +146,20 @@ export default function AdminPage() {
     // Clean up old UUID-based studios from localStorage to prevent type mismatch errors
     if (typeof window !== 'undefined') {
       const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
-      const validStudios = storedStudios.filter((studio: any) => 
-        typeof studio.id === 'number' || /^\d+$/.test(studio.id)
-      )
+      const validStudios = storedStudios.filter((studio: any) => {
+        const id = studio.id
+        // Keep if: 
+        // 1. Numeric ID (from Supabase)
+        // 2. String numeric ID (from Supabase as string)
+        // 3. studio-timestamp format (created locally)
+        return typeof id === 'number' || 
+               /^\d+$/.test(id) || 
+               /^studio-\d+$/.test(id)
+      })
       
       if (validStudios.length !== storedStudios.length) {
         console.log(`🧹 Cleaned up ${storedStudios.length - validStudios.length} old UUID studios from localStorage`)
+        console.log('🧹 Kept studios:', validStudios.map(s => ({ id: s.id, name: s.name_en || s.name_ja })))
         localStorage.setItem('ink-finder-studios', JSON.stringify(validStudios))
       }
     }
@@ -207,21 +215,31 @@ export default function AdminPage() {
   }
 
   const loadStudios = async () => {
+    console.log('🔧 Admin: Starting to load studios...')
+    console.log('🔧 Admin: isSupabaseConfigured =', isSupabaseConfigured)
+    
+    // First check what's in localStorage
+    const storedStudios = typeof window !== 'undefined' 
+      ? JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      : []
+    console.log('🔧 Admin: Studios currently in localStorage:', storedStudios.length, storedStudios)
+    
     try {
       if (isSupabaseConfigured) {
-        console.log('🔧 Admin: Loading studios from Supabase...')
+        console.log('🔧 Admin: Loading studios via fetchStudios function...')
         const { fetchStudios } = await import('@/lib/api')
-        const supabaseStudios = await fetchStudios()
-        console.log(`✅ Admin: Loaded ${supabaseStudios.length} studios from Supabase`)
-        setStudios(supabaseStudios)
+        const result = await fetchStudios()
+        console.log('🔧 Admin: fetchStudios returned:', result.length, 'studios:', result)
+        setStudios(result)
+        console.log('🔧 Admin: Set studios state to:', result.length, 'items')
       } else {
-        const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+        console.log('🔧 Admin: Supabase not configured, using localStorage directly')
         setStudios(storedStudios)
+        console.log('🔧 Admin: Set studios state from localStorage:', storedStudios.length, 'items')
       }
     } catch (error) {
-      console.error('❌ Error loading studios:', error)
-      // Fallback to localStorage
-      const storedStudios = JSON.parse(localStorage.getItem('ink-finder-studios') || '[]')
+      console.error('❌ Admin: Error loading studios:', error)
+      console.log('🔧 Admin: Falling back to localStorage with', storedStudios.length, 'items')
       setStudios(storedStudios)
     }
   }
@@ -358,34 +376,26 @@ export default function AdminPage() {
 
   const handleSaveStudio = async (studioData: Omit<Studio, 'id' | 'created_at' | 'view_count'>) => {
     try {
+      console.log('🔧 Admin: Starting to save studio:', studioData)
       let savedStudio: Studio | null = null
       
       if (editingStudio) {
-        // Update existing studio using API
+        console.log('🔧 Admin: Updating existing studio:', editingStudio.id)
         savedStudio = await updateStudio(editingStudio.id, studioData)
-        if (savedStudio) {
-          // Update local state
-          const updatedStudios = studios.map(studio => 
-            studio.id === editingStudio.id ? savedStudio! : studio
-          )
-          setStudios(updatedStudios)
-          localStorage.setItem('ink-finder-studios', JSON.stringify(updatedStudios))
-        }
       } else {
-        // Create new studio using API
+        console.log('🔧 Admin: Creating new studio')
         savedStudio = await createStudio(studioData)
-        if (savedStudio) {
-          // Add to local state
-          const updatedStudios = [...studios, savedStudio]
-          setStudios(updatedStudios)
-          localStorage.setItem('ink-finder-studios', JSON.stringify(updatedStudios))
-        }
       }
       
       if (savedStudio) {
+        console.log('✅ Admin: Studio saved successfully:', savedStudio.name_en || savedStudio.name_ja)
+        console.log('🔧 Admin: Reloading studios to ensure consistency...')
+        
+        // Reload studios from the source of truth instead of manual state management
+        await loadStudios()
+        
         setShowForm(false)
         setEditingStudio(null)
-        console.log('✅ Studio saved successfully:', savedStudio.name_en || savedStudio.name_ja)
       } else {
         console.error('❌ Failed to save studio - no data returned')
         alert('Failed to save studio - no data returned. Please check the console for details.')
@@ -432,13 +442,14 @@ export default function AdminPage() {
     
     if (confirm('Are you sure you want to delete this studio?')) {
       try {
+        console.log('🔧 Admin: Deleting studio:', id)
         const success = await deleteStudio(id)
         if (success) {
-          // Update local state
-          const updatedStudios = studios.filter(studio => studio.id !== id)
-          setStudios(updatedStudios)
-          localStorage.setItem('ink-finder-studios', JSON.stringify(updatedStudios))
-          console.log('✅ Studio deleted successfully')
+          console.log('✅ Admin: Studio deleted successfully')
+          console.log('🔧 Admin: Reloading studios to ensure consistency...')
+          
+          // Reload studios from the source of truth instead of manual state management
+          await loadStudios()
         } else {
           console.error('❌ Failed to delete studio')
           alert('Failed to delete studio. Please try again.')
