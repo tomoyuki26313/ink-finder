@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // Dynamic sitemap generator with artist and blog URLs
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://ink-finder.com'
+  const baseUrl = 'https://www.ink-finder.com'
   
   // Validate environment variables
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

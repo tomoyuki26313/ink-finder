@@ -80,12 +80,12 @@ export const structuredData = {
     '@type': 'WebSite',
     name: 'Ink Finder',
     description: seoConfig[locale].description,
-    url: locale === 'ja' ? 'https://ink-finder.com/ja' : 'https://ink-finder.com/en',
+    url: locale === 'ja' ? 'https://www.ink-finder.com/ja' : 'https://www.ink-finder.com/en',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `https://ink-finder.com/${locale}/search?q={search_term_string}`
+        urlTemplate: `https://www.ink-finder.com/${locale}/search?q={search_term_string}`
       },
       'query-input': 'required name=search_term_string'
     },
@@ -96,8 +96,8 @@ export const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ink Finder',
-    url: 'https://ink-finder.com',
-    logo: 'https://ink-finder.com/logo.png',
+    url: 'https://www.ink-finder.com',
+    logo: 'https://www.ink-finder.com/logo.png',
     sameAs: [
       'https://www.instagram.com/inkfinder_jp',
       'https://twitter.com/inkfinder_jp',
@@ -147,12 +147,12 @@ export const structuredData = {
       name: 'Ink Finder',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://ink-finder.com/logo.png'
+        url: 'https://www.ink-finder.com/logo.png'
       }
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://ink-finder.com/${locale}/blog/${post.slug}`
+      '@id': `https://www.ink-finder.com/${locale}/blog/${post.slug}`
     },
     inLanguage: locale === 'ja' ? 'ja-JP' : 'en-US'
   }),
@@ -180,10 +180,10 @@ export function generateMetaTags(locale: 'ja' | 'en', page?: string) {
     openGraph: {
       ...config.openGraph,
       type: 'website',
-      url: `https://ink-finder.com/${locale}`,
+      url: `https://www.ink-finder.com/${locale}`,
       images: [
         {
-          url: 'https://ink-finder.com/og-image.jpg',
+          url: 'https://www.ink-finder.com/og-image.jpg',
           width: 1200,
           height: 630,
           alt: locale === 'ja' ? 'Ink Finder - 日本のタトゥーアーティスト検索' : 'Ink Finder - Japanese Tattoo Artists'
@@ -194,14 +194,14 @@ export function generateMetaTags(locale: 'ja' | 'en', page?: string) {
       card: 'summary_large_image',
       title: config.openGraph.title,
       description: config.openGraph.description,
-      images: ['https://ink-finder.com/og-image.jpg']
+      images: ['https://www.ink-finder.com/og-image.jpg']
     },
     alternates: {
-      canonical: `https://ink-finder.com/${locale}`,
+      canonical: `https://www.ink-finder.com/${locale}`,
       languages: {
-        'ja': 'https://ink-finder.com/ja',
-        'en': 'https://ink-finder.com/en',
-        'x-default': 'https://ink-finder.com'
+        'ja': 'https://www.ink-finder.com/ja',
+        'en': 'https://www.ink-finder.com/en',
+        'x-default': 'https://www.ink-finder.com'
       }
     }
   };
