@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/private/', '/admin/'],
     },
-    sitemap: 'https://inkfinder.app/sitemap.xml',
+    sitemap: 'https://ink-finder.com/sitemap.xml',
   }
 }

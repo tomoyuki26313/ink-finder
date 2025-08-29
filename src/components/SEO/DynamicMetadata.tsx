@@ -26,7 +26,7 @@ export function generatePageMetadata({
   path
 }: PageSEOProps): Metadata {
   const config = seoConfig[locale];
-  const siteUrl = 'https://inkfinder.jp';
+  const siteUrl = 'https://ink-finder.com';
   const url = `${siteUrl}/${locale}${path}`;
   
   const pageTitle = title 

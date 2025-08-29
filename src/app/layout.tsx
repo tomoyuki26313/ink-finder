@@ -63,13 +63,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     alternateLocale: 'ja_JP',
-    url: 'https://inkfinder.app',
+    url: 'https://ink-finder.com',
     siteName: 'Ink Finder',
     title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',
     description: 'Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.',
     images: [
       {
-        url: 'https://inkfinder.app/og-image.jpg',
+        url: 'https://ink-finder.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Ink Finder - Japanese Tattoo Artists Directory',
@@ -80,13 +80,13 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',
     description: 'Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.',
-    images: ['https://inkfinder.app/og-image.jpg'],
+    images: ['https://ink-finder.com/og-image.jpg'],
   },
   alternates: {
-    canonical: 'https://inkfinder.app',
+    canonical: 'https://ink-finder.com',
     languages: {
-      'en-US': 'https://inkfinder.app',
-      'ja-JP': 'https://inkfinder.app/ja',
+      'en-US': 'https://ink-finder.com/en',
+      'ja-JP': 'https://ink-finder.com/ja',
     },
   },
   verification: {
@@ -102,7 +102,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href="https://inkfinder.app" />
+        <link rel="canonical" href="https://ink-finder.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -111,16 +111,16 @@ export default function RootLayout({
               "@type": "WebSite",
               "name": "Ink Finder",
               "description": "Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.",
-              "url": "https://inkfinder.app",
+              "url": "https://ink-finder.com",
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://inkfinder.app/search?q={search_term_string}",
+                "target": "https://ink-finder.com/search?q={search_term_string}",
                 "query-input": "required name=search_term_string"
               },
               "publisher": {
                 "@type": "Organization",
                 "name": "Ink Finder",
-                "url": "https://inkfinder.app"
+                "url": "https://ink-finder.com"
               }
             })
           }}

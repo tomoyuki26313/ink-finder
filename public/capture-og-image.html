@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OG Image Capture Tool</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .instructions {
+            max-width: 800px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .canvas-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 4px;
+            color: #234e52;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h1>OG Image Capture Tool</h1>
+        <p>Click the button below to generate and download the OG image for Ink Finder.</p>
+        <button onclick="generateOGImage()">Generate OG Image</button>
+        <button onclick="downloadImage()">Download as og-image.jpg</button>
+        <div id="status"></div>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="canvas" width="1200" height="630"></canvas>
+    </div>
+
+    <script>
+        function generateOGImage() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+            
+            // Add pattern overlay
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            for (let i = -630; i < 1200; i += 70) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i + 630, 630);
+                ctx.stroke();
+            }
+            ctx.restore();
+            
+            // Add decorative elements
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            ctx.font = '80px sans-serif';
+            ctx.fillStyle = 'white';
+            ctx.save();
+            ctx.translate(100, 50);
+            ctx.rotate(-15 * Math.PI / 180);
+            ctx.fillText('🎨', 0, 50);
+            ctx.restore();
+            
+            ctx.font = '60px sans-serif';
+            ctx.save();
+            ctx.translate(150, 500);
+            ctx.rotate(20 * Math.PI / 180);
+            ctx.fillText('✨', 0, 0);
+            ctx.restore();
+            
+            ctx.font = '70px sans-serif';
+            ctx.save();
+            ctx.translate(1000, 100);
+            ctx.rotate(-10 * Math.PI / 180);
+            ctx.fillText('🖋️', 0, 50);
+            ctx.restore();
+            
+            ctx.font = '90px sans-serif';
+            ctx.save();
+            ctx.translate(1000, 500);
+            ctx.rotate(15 * Math.PI / 180);
+            ctx.fillText('🌸', 0, 0);
+            ctx.restore();
+            ctx.restore();
+            
+            // Add main text
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            
+            // Logo
+            ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetY = 10;
+            ctx.fillText('Ink Finder', 600, 280);
+            
+            // Japanese tagline
+            ctx.font = '36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetY = 5;
+            ctx.fillText('日本のタトゥーアーティストを見つけよう', 600, 350);
+            
+            // English tagline
+            ctx.font = '28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText('Discover Tattoo Artists in Japan', 600, 400);
+            
+            // Add icons at bottom right
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+            const icons = ['📍', '🔍', '🎨'];
+            icons.forEach((icon, i) => {
+                ctx.save();
+                ctx.globalAlpha = 0.2;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(1080 - (i * 60), 550, 25, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+                
+                ctx.font = '24px sans-serif';
+                ctx.fillText(icon, 1080 - (i * 60), 558);
+            });
+            
+            document.getElementById('status').innerHTML = '<div class="status">✅ OG Image generated successfully! Click "Download" to save it.</div>';
+        }
+        
+        function downloadImage() {
+            const canvas = document.getElementById('canvas');
+            canvas.toBlob(function(blob) {
+                const link = document.createElement('a');
+                link.download = 'og-image.jpg';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                document.getElementById('status').innerHTML = '<div class="status">✅ Image downloaded! Move it to the /public folder.</div>';
+            }, 'image/jpeg', 0.95);
+        }
+        
+        // Generate on load
+        window.onload = function() {
+            generateOGImage();
+        };
+    </script>
+</body>
+</html>
