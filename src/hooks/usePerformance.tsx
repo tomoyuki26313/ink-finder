@@ -6,13 +6,17 @@ import { useEffect, useCallback, useRef } from 'react'
 export function useWebVitals() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
-        onCLS(console.log)
-        onFID(console.log)
-        onFCP(console.log)
-        onLCP(console.log)
-        onTTFB(console.log)
-      })
+      import('web-vitals')
+        .then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+          onCLS(console.log)
+          onFID(console.log)
+          onFCP(console.log)
+          onLCP(console.log)
+          onTTFB(console.log)
+        })
+        .catch((error) => {
+          console.warn('Web Vitals not available:', error)
+        })
     }
   }, [])
 }
