@@ -14,7 +14,6 @@ import { getStoredArtists, subscribeToArtistUpdates } from '@/lib/dataStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
 import { StructuredData } from '@/components/SEO/StructuredData'
-import RelatedLinks, { getArtistRelatedLinks } from '@/components/RelatedLinks'
 import { useWebVitals, usePerformanceMonitor } from '@/hooks/usePerformance'
 
 export default function Home() {
@@ -454,14 +453,6 @@ export default function Home() {
           availableMotifs={motifs}
         />
       )}
-
-      {/* Related Links Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <RelatedLinks 
-          links={getArtistRelatedLinks(language)}
-          className="mb-8"
-        />
-      </div>
 
       <footer className="bg-slate-100 mt-16 py-8 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
