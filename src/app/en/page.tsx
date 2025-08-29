@@ -13,6 +13,8 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { getStoredArtists, subscribeToArtistUpdates } from '@/lib/dataStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
+import { StructuredData } from '@/components/SEO/StructuredData'
+import RelatedLinks, { getArtistRelatedLinks } from '@/components/RelatedLinks'
 
 export default function Home() {
   const { t, language } = useLanguage()
@@ -279,8 +281,11 @@ export default function Home() {
   }, [filteredArtists, itemsPerPage])
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: '#E6E6E6'}}>
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <>
+      <StructuredData type="website" locale="en" />
+      <StructuredData type="organization" locale="en" />
+      <div className="min-h-screen" style={{backgroundColor: '#E6E6E6'}}>
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
         {/* Desktop Layout */}
         <div className="hidden md:block">
           <div className="max-w-[1261px] mx-auto px-4 relative py-6">
@@ -443,6 +448,14 @@ export default function Home() {
         />
       )}
 
+      {/* Related Links Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <RelatedLinks 
+          links={getArtistRelatedLinks(language)}
+          className="mb-8"
+        />
+      </div>
+
       <footer className="bg-slate-100 mt-16 py-8 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {language === 'ja' && (
@@ -455,6 +468,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   )
 }
