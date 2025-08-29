@@ -10,6 +10,7 @@ import { getPrefectureTranslation } from '@/lib/prefectureTranslations'
 import { getAllStylesFromImages } from '@/lib/imageStyles'
 import { getAllMotifsFromImages } from '@/lib/imageMotifs'
 import InstagramEmbed from './InstagramEmbed'
+import InstagramPreloader from './InstagramPreloader'
 
 interface ArtistModalProps {
   artist: ArtistWithStudio
@@ -25,9 +26,13 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const [motifs, setMotifs] = useState<Motif[]>(availableMotifs)
   const [isDesktop, setIsDesktop] = useState(false)
   const [embedKey, setEmbedKey] = useState(0)
+  const [shouldPreload, setShouldPreload] = useState(false)
 
   // Force re-render on mount to ensure proper Instagram embed sizing
   useEffect(() => {
+    // Start preloading immediately when modal opens
+    setShouldPreload(true)
+    
     const timer = setTimeout(() => {
       setEmbedKey(prev => prev + 1)
     }, 50)
@@ -205,10 +210,19 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   }, [onClose, currentImageIndex])
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={handleBackdropClick}
-    >
+    <>
+      {/* Aggressive Instagram Preloader for Modal */}
+      {shouldPreload && validImages.length > 0 && (
+        <InstagramPreloader 
+          instagramUrls={validImages} 
+          aggressive={true} 
+        />
+      )}
+      
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        onClick={handleBackdropClick}
+      >
       <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto flex flex-col">
         <div className="relative">
           <button
@@ -403,6 +417,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
