@@ -14,6 +14,7 @@ import { getStoredArtists, subscribeToArtistUpdates } from '@/lib/dataStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedField } from '@/lib/multilingual'
 import { StructuredData } from '@/components/SEO/StructuredData'
+import InstagramPreloader from '@/components/InstagramPreloader'
 
 export default function Home() {
   const { t, language } = useLanguage()
@@ -279,10 +280,29 @@ export default function Home() {
     return filteredArtists.slice(0, itemsPerPage)
   }, [filteredArtists, itemsPerPage])
 
+  // Collect all Instagram URLs for aggressive preloading
+  const allInstagramUrls = useMemo(() => {
+    const urls: string[] = []
+    displayedArtists.forEach(artist => {
+      const instagramPosts = artist.instagram_posts || artist.images || []
+      urls.push(...instagramPosts.filter(post => post && post.trim() !== ''))
+    })
+    return urls.slice(0, 50) // Aggressive: preload first 50 Instagram posts
+  }, [displayedArtists])
+
   return (
     <>
       <StructuredData type="website" locale="en" />
       <StructuredData type="organization" locale="en" />
+      
+      {/* Aggressive Instagram Preloading */}
+      {allInstagramUrls.length > 0 && (
+        <InstagramPreloader 
+          instagramUrls={allInstagramUrls} 
+          aggressive={true} 
+        />
+      )}
+      
       <div className="min-h-screen" style={{backgroundColor: '#E6E6E6'}}>
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
         {/* Desktop Layout */}

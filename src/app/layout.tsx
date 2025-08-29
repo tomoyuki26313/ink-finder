@@ -103,6 +103,13 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="canonical" href="https://www.ink-finder.com" />
+        {/* Instagram aggressive preloading */}
+        <link rel="dns-prefetch" href="https://www.instagram.com" />
+        <link rel="dns-prefetch" href="https://scontent.cdninstagram.com" />
+        <link rel="dns-prefetch" href="https://scontent.xx.fbcdn.net" />
+        <link rel="preconnect" href="https://www.instagram.com" crossOrigin="" />
+        <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="" />
+        <link rel="preload" href="https://www.instagram.com/embed.js" as="script" crossOrigin="" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

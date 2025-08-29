@@ -10,6 +10,7 @@ import { getPrefectureTranslation } from '@/lib/prefectureTranslations'
 import { getAllStylesFromImages } from '@/lib/imageStyles'
 import { getAllMotifsFromImages } from '@/lib/imageMotifs'
 import InstagramEmbed from './InstagramEmbed'
+import InstagramPreloader from './InstagramPreloader'
 
 interface ArtistCardProps {
   artist: ArtistWithStudio
@@ -43,6 +44,8 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
   const { language, t } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [shouldPreload, setShouldPreload] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   
   // Filter out empty Instagram posts - handle both old and new structure
@@ -208,12 +211,15 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
 
   // Note: Instagram preloading removed due to X-Frame-Options restrictions
 
-  // Intersection Observer for fade-in animation with delay
+  // Aggressive Intersection Observer for preloading and animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            // Immediately start preloading (aggressive)
+            setShouldPreload(true)
+            
             // Apply delay before showing the card
             setTimeout(() => {
               setIsVisible(true)
@@ -223,8 +229,8 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
         })
       },
       {
-        threshold: 0.1,
-        rootMargin: '50px'
+        threshold: 0.05, // More aggressive threshold
+        rootMargin: '200px' // Much larger margin for early preloading
       }
     )
 
@@ -239,6 +245,23 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
     }
   }, [delay])
 
+  // Aggressive hover preloading
+  const handleMouseEnter = () => {
+    setIsHovered(true)
+    setShouldPreload(true)
+    
+    // Pre-process Instagram embeds on hover
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.instgrm) {
+        window.instgrm.Embeds.process()
+      }
+    }, 50)
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+  }
+
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation()
     setCurrentImageIndex((prev) => (prev + 1) % validInstagramPosts.length)
@@ -250,13 +273,24 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
   }
 
   return (
-    <div
-      ref={cardRef}
-      className={`group bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:border-purple-200 transition-all duration-700 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}
-      style={{ willChange: 'transform, opacity', contain: 'layout style paint' }}
-    >
+    <>
+      {/* Aggressive Instagram Preloader */}
+      {shouldPreload && (
+        <InstagramPreloader 
+          instagramUrls={validInstagramPosts} 
+          aggressive={true} 
+        />
+      )}
+      
+      <div
+        ref={cardRef}
+        className={`group bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:border-purple-200 transition-all duration-700 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+        style={{ willChange: 'transform, opacity', contain: 'layout style paint' }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
       {/* Artist Information Section - Moved to Top */}
       <div className="p-5">
         {/* Name and Location on same line */}
@@ -396,7 +430,8 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
         )}
         
       </div>
-    </div>
+      </div>
+    </>
   )
 })
 
