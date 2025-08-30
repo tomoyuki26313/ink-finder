@@ -46,7 +46,9 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
   const [isVisible, setIsVisible] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [shouldPreload, setShouldPreload] = useState(false)
+  const [preloadLevel, setPreloadLevel] = useState<'none' | 'first' | 'all'>('none')
   const cardRef = useRef<HTMLDivElement>(null)
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   // Filter out empty Instagram posts - handle both old and new structure
   const allInstagramPosts = (artist.instagram_posts || artist.images || []).filter(post => post && post.trim() !== '')
@@ -211,19 +213,28 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
 
   // Note: Instagram preloading removed due to X-Frame-Options restrictions
 
-  // Aggressive Intersection Observer for preloading and animation
+  // Staged Intersection Observer for preloading and animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Immediately start preloading (aggressive)
+            // Stage 1: Preload first image when card enters viewport
             setShouldPreload(true)
+            setPreloadLevel('first')
             
             // Apply delay before showing the card
             setTimeout(() => {
               setIsVisible(true)
             }, delay)
+            
+            // Stage 2: After card is visible, preload all images
+            setTimeout(() => {
+              if (entry.isIntersecting) {
+                setPreloadLevel('all')
+              }
+            }, delay + 500)
+            
             observer.unobserve(entry.target)
           }
         })
@@ -245,21 +256,35 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
     }
   }, [delay])
 
-  // Aggressive hover preloading
+  // Staged hover preloading with timer
   const handleMouseEnter = () => {
     setIsHovered(true)
     setShouldPreload(true)
     
-    // Pre-process Instagram embeds on hover
-    setTimeout(() => {
+    // Clear any existing timer
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+    }
+    
+    // Stage 3: If hovering for more than 300ms, preload all images (high intent)
+    hoverTimerRef.current = setTimeout(() => {
+      setPreloadLevel('all')
+      
+      // Pre-process Instagram embeds on hover
       if (typeof window !== 'undefined' && window.instgrm) {
         window.instgrm.Embeds.process()
       }
-    }, 50)
+    }, 300)
   }
 
   const handleMouseLeave = () => {
     setIsHovered(false)
+    
+    // Clear hover timer
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
   }
 
   const nextImage = (e: React.MouseEvent) => {
@@ -272,13 +297,20 @@ const ArtistCard = memo(function ArtistCard({ artist, onClick, availableStyles =
     setCurrentImageIndex((prev) => (prev - 1 + validInstagramPosts.length) % validInstagramPosts.length)
   }
 
+  // Determine which images to preload based on stage
+  const getPreloadUrls = () => {
+    if (preloadLevel === 'none') return []
+    if (preloadLevel === 'first') return validInstagramPosts.slice(0, 1)
+    return validInstagramPosts // 'all'
+  }
+
   return (
     <>
-      {/* Aggressive Instagram Preloader */}
+      {/* Staged Instagram Preloader */}
       {shouldPreload && (
         <InstagramPreloader 
-          instagramUrls={validInstagramPosts} 
-          aggressive={true} 
+          instagramUrls={getPreloadUrls()} 
+          aggressive={preloadLevel === 'all'} 
         />
       )}
       

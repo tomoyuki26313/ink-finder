@@ -5,15 +5,17 @@ import { useEffect, useRef, useCallback } from 'react'
 interface InstagramPreloaderProps {
   instagramUrls: string[]
   aggressive?: boolean
+  priority?: boolean // For network priority hints
 }
 
 // Cache for preloaded content
 const preloadCache = new Map<string, Promise<any>>()
 const imageCache = new Map<string, HTMLImageElement>()
 
-export default function InstagramPreloader({ instagramUrls, aggressive = true }: InstagramPreloaderProps) {
+export default function InstagramPreloader({ instagramUrls, aggressive = true, priority = false }: InstagramPreloaderProps) {
   const preloadedScripts = useRef(new Set<string>())
   const preloadQueue = useRef<string[]>([])
+  const preloadedUrls = useRef(new Set<string>())
 
   // Extract Instagram post IDs from URLs
   const extractInstagramId = useCallback((url: string): string | null => {
@@ -164,66 +166,81 @@ export default function InstagramPreloader({ instagramUrls, aggressive = true }:
     })
   }, [])
 
-  // Main aggressive preloading effect
+  // Main staged preloading effect
   useEffect(() => {
-    if (!aggressive || instagramUrls.length === 0) return
+    if (instagramUrls.length === 0) return
+    
+    // Filter out already preloaded URLs for efficiency
+    const newUrls = instagramUrls.filter(url => !preloadedUrls.current.has(url))
+    if (newUrls.length === 0) return
+    
+    // Mark these URLs as being preloaded
+    newUrls.forEach(url => preloadedUrls.current.add(url))
 
-    const runAggressivePreloading = async () => {
+    const runPreloading = async () => {
       try {
         // 1. Preload embed script immediately
         preloadEmbedScript()
 
-        // 2. Start aggressive image prefetching
-        prefetchInstagramImages(instagramUrls)
+        // 2. Start image prefetching (only if aggressive or has priority)
+        if (aggressive || priority) {
+          prefetchInstagramImages(newUrls)
+        }
 
-        // 3. Prefetch oembed data
-        prefetchOembedData(instagramUrls)
+        // 3. Prefetch oembed data (only if aggressive)
+        if (aggressive) {
+          prefetchOembedData(newUrls)
+        }
 
         // 4. Trigger early embed processing
         setTimeout(() => {
           triggerEarlyEmbedProcessing()
         }, 500)
 
-        // 5. Warmup additional Instagram resources
-        const additionalResources = [
-          'https://www.instagram.com/static/bundles/metro/ConsumerLibCommons.js',
-          'https://www.instagram.com/static/bundles/metro/ConsumerAsyncCommons.js'
-        ]
+        // 5. Warmup additional Instagram resources (only if aggressive)
+        if (aggressive) {
+          const additionalResources = [
+            'https://www.instagram.com/static/bundles/metro/ConsumerLibCommons.js',
+            'https://www.instagram.com/static/bundles/metro/ConsumerAsyncCommons.js'
+          ]
 
-        additionalResources.forEach(url => {
-          const link = document.createElement('link')
-          link.rel = 'prefetch'
-          link.href = url
-          link.crossOrigin = 'anonymous'
-          document.head.appendChild(link)
-        })
+          additionalResources.forEach(url => {
+            const link = document.createElement('link')
+            link.rel = 'prefetch'
+            link.href = url
+            link.crossOrigin = 'anonymous'
+            document.head.appendChild(link)
+          })
+        }
 
       } catch (error) {
         console.warn('Aggressive Instagram preloading failed:', error)
       }
     }
 
-    // Start immediately and also on user interaction
-    runAggressivePreloading()
+    // Start immediately
+    runPreloading()
 
-    // Additional preloading on first user interaction
-    const handleFirstInteraction = () => {
-      runAggressivePreloading()
-      
-      // Remove listeners after first use
-      window.removeEventListener('scroll', handleFirstInteraction)
-      window.removeEventListener('mouseenter', handleFirstInteraction)
-      window.removeEventListener('touchstart', handleFirstInteraction)
-    }
+    // Additional preloading on first user interaction (only if aggressive)
+    if (aggressive) {
+      const handleFirstInteraction = () => {
+        runPreloading()
+        
+        // Remove listeners after first use
+        window.removeEventListener('scroll', handleFirstInteraction)
+        window.removeEventListener('mouseenter', handleFirstInteraction)
+        window.removeEventListener('touchstart', handleFirstInteraction)
+      }
 
-    window.addEventListener('scroll', handleFirstInteraction, { passive: true, once: true })
-    window.addEventListener('mouseenter', handleFirstInteraction, { passive: true, once: true })
-    window.addEventListener('touchstart', handleFirstInteraction, { passive: true, once: true })
+      window.addEventListener('scroll', handleFirstInteraction, { passive: true, once: true })
+      window.addEventListener('mouseenter', handleFirstInteraction, { passive: true, once: true })
+      window.addEventListener('touchstart', handleFirstInteraction, { passive: true, once: true })
 
-    return () => {
-      window.removeEventListener('scroll', handleFirstInteraction)
-      window.removeEventListener('mouseenter', handleFirstInteraction) 
-      window.removeEventListener('touchstart', handleFirstInteraction)
+      return () => {
+        window.removeEventListener('scroll', handleFirstInteraction)
+        window.removeEventListener('mouseenter', handleFirstInteraction) 
+        window.removeEventListener('touchstart', handleFirstInteraction)
+      }
     }
   }, [instagramUrls, aggressive, preloadEmbedScript, prefetchInstagramImages, prefetchOembedData, triggerEarlyEmbedProcessing])
 
