@@ -32,8 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
       alternates: {
         languages: {
-          en: baseUrl,
-          ja: `${baseUrl}/ja`,
+          'en-US': baseUrl,
+          'ja-JP': `${baseUrl}/ja`,
         },
       },
     },
@@ -44,8 +44,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
       alternates: {
         languages: {
-          en: `${baseUrl}/artists`,
-          ja: `${baseUrl}/ja/artists`,
+          'en-US': `${baseUrl}/artists`,
+          'ja-JP': `${baseUrl}/ja/artists`,
         },
       },
     },
@@ -56,8 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
       alternates: {
         languages: {
-          en: `${baseUrl}/styles`,
-          ja: `${baseUrl}/ja/styles`,
+          'en-US': `${baseUrl}/styles`,
+          'ja-JP': `${baseUrl}/ja/styles`,
         },
       },
     },
@@ -68,8 +68,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
       alternates: {
         languages: {
-          en: `${baseUrl}/locations`,
-          ja: `${baseUrl}/ja/locations`,
+          'en-US': `${baseUrl}/locations`,
+          'ja-JP': `${baseUrl}/ja/locations`,
         },
       },
     },
@@ -80,8 +80,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
       alternates: {
         languages: {
-          en: `${baseUrl}/about`,
-          ja: `${baseUrl}/ja/about`,
+          'en-US': `${baseUrl}/about`,
+          'ja-JP': `${baseUrl}/ja/about`,
         },
       },
     },
@@ -92,8 +92,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
       alternates: {
         languages: {
-          en: `${baseUrl}/contact`,
-          ja: `${baseUrl}/ja/contact`,
+          'en-US': `${baseUrl}/contact`,
+          'ja-JP': `${baseUrl}/ja/contact`,
         },
       },
     },
@@ -104,8 +104,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
       alternates: {
         languages: {
-          en: `${baseUrl}/blog`,
-          ja: `${baseUrl}/ja/blog`,
+          'en-US': `${baseUrl}/blog`,
+          'ja-JP': `${baseUrl}/ja/blog`,
         },
       },
     },
@@ -130,8 +130,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
         alternates: {
           languages: {
-            en: `${baseUrl}/artists/${artist.slug}`,
-            ja: `${baseUrl}/ja/artists/${artist.slug}`,
+            'en-US': `${baseUrl}/artists/${artist.slug}`,
+            'ja-JP': `${baseUrl}/ja/artists/${artist.slug}`,
           },
         },
       })) || []
@@ -156,8 +156,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
     alternates: {
       languages: {
-        en: `${baseUrl}/blog/${post.slug}`,
-        ja: `${baseUrl}/ja/blog/${post.slug}`,
+        'en-US': `${baseUrl}/blog/${post.slug}`,
+        'ja-JP': `${baseUrl}/ja/blog/${post.slug}`,
       },
     },
   })) || []
@@ -180,8 +180,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
     alternates: {
       languages: {
-        en: `${baseUrl}/styles/${style}`,
-        ja: `${baseUrl}/ja/styles/${style}`,
+        'en-US': `${baseUrl}/styles/${style}`,
+        'ja-JP': `${baseUrl}/ja/styles/${style}`,
       },
     },
   }))
@@ -203,8 +203,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
     alternates: {
       languages: {
-        en: `${baseUrl}/locations/${city}`,
-        ja: `${baseUrl}/ja/locations/${city}`,
+        'en-US': `${baseUrl}/locations/${city}`,
+        'ja-JP': `${baseUrl}/ja/locations/${city}`,
       },
     },
   }))
@@ -228,8 +228,8 @@ function getStaticSitemap(baseUrl: string): MetadataRoute.Sitemap {
       priority: 1,
       alternates: {
         languages: {
-          en: baseUrl,
-          ja: `${baseUrl}/ja`,
+          'en-US': baseUrl,
+          'ja-JP': `${baseUrl}/ja`,
         },
       },
     },
@@ -240,8 +240,8 @@ function getStaticSitemap(baseUrl: string): MetadataRoute.Sitemap {
       priority: 0.9,
       alternates: {
         languages: {
-          en: `${baseUrl}/artists`,
-          ja: `${baseUrl}/ja/artists`,
+          'en-US': `${baseUrl}/artists`,
+          'ja-JP': `${baseUrl}/ja/artists`,
         },
       },
     },
@@ -252,8 +252,8 @@ function getStaticSitemap(baseUrl: string): MetadataRoute.Sitemap {
       priority: 0.7,
       alternates: {
         languages: {
-          en: `${baseUrl}/blog`,
-          ja: `${baseUrl}/ja/blog`,
+          'en-US': `${baseUrl}/blog`,
+          'ja-JP': `${baseUrl}/ja/blog`,
         },
       },
     },
@@ -276,8 +276,8 @@ function getStaticSitemap(baseUrl: string): MetadataRoute.Sitemap {
     priority: 0.6,
     alternates: {
       languages: {
-        en: `${baseUrl}/styles/${style}`,
-        ja: `${baseUrl}/ja/styles/${style}`,
+        'en-US': `${baseUrl}/styles/${style}`,
+        'ja-JP': `${baseUrl}/ja/styles/${style}`,
       },
     },
   }))
@@ -299,8 +299,8 @@ function getStaticSitemap(baseUrl: string): MetadataRoute.Sitemap {
     priority: 0.6,
     alternates: {
       languages: {
-        en: `${baseUrl}/locations/${city}`,
-        ja: `${baseUrl}/ja/locations/${city}`,
+        'en-US': `${baseUrl}/locations/${city}`,
+        'ja-JP': `${baseUrl}/ja/locations/${city}`,
       },
     },
   }))

@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',
   description: 'Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.',
   openGraph: {
-    locale: 'en_US',
+    locale: 'en-US',
   },
 }
 

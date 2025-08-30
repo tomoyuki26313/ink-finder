@@ -34,6 +34,7 @@ export const viewport = {
 export const metadata: Metadata = {
   title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',
   description: 'Find authentic Japanese tattoo artists and studios. Browse portfolios, read reviews, and book appointments with verified irezumi masters and contemporary tattoo artists across Japan.',
+  manifest: '/manifest.json',
   keywords: [
     'tattoo artists Japan',
     'Japanese tattoo',
@@ -61,8 +62,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    locale: 'en_US',
-    alternateLocale: 'ja_JP',
+    locale: 'en-US',
+    alternateLocale: 'ja-JP',
     url: 'https://www.ink-finder.com',
     siteName: 'Ink Finder',
     title: 'Ink Finder - Discover Japanese Tattoo Artists & Studios',

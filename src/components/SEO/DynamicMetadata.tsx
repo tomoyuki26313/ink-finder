@@ -49,7 +49,7 @@ export function generatePageMetadata({
       description: pageDescription,
       url,
       siteName: 'Ink Finder',
-      locale: locale === 'ja' ? 'ja_JP' : 'en_US',
+      locale: locale === 'ja' ? 'ja-JP' : 'en-US',
       type: article ? 'article' : 'website',
       images: [
         {
@@ -77,8 +77,8 @@ export function generatePageMetadata({
     alternates: {
       canonical: url,
       languages: {
-        'ja': `${siteUrl}/ja${path}`,
-        'en': `${siteUrl}/en${path}`,
+        'ja-JP': `${siteUrl}/ja${path}`,
+        'en-US': `${siteUrl}/en${path}`,
         'x-default': `${siteUrl}${path}`
       }
     },

@@ -33,7 +33,7 @@ export const seoConfig = {
     openGraph: {
       title: 'Ink Finder - 日本のタトゥーアーティスト検索プラットフォーム',
       description: '日本全国のタトゥーアーティストを検索。スタイル、地域、価格帯から理想のアーティストを見つけよう。',
-      locale: 'ja_JP'
+      locale: 'ja-JP'
     }
   },
   en: {
@@ -68,7 +68,7 @@ export const seoConfig = {
     openGraph: {
       title: 'Ink Finder - Find Tattoo Artists in Japan',
       description: 'Discover talented tattoo artists across Japan. English-speaking artists, traditional Japanese designs, and modern styles. Book your tattoo experience in Tokyo, Osaka, and beyond.',
-      locale: 'en_US'
+      locale: 'en-US'
     }
   }
 };
