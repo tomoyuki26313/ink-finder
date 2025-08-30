@@ -11,6 +11,7 @@ import { getAllStylesFromImages } from '@/lib/imageStyles'
 import { getAllMotifsFromImages } from '@/lib/imageMotifs'
 import InstagramEmbed from './InstagramEmbed'
 import InstagramPreloader from './InstagramPreloader'
+import { useInstagramPerformance } from '@/hooks/useInstagramPerformance'
 
 interface ArtistModalProps {
   artist: ArtistWithStudio
@@ -27,16 +28,27 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const [isDesktop, setIsDesktop] = useState(false)
   const [embedKey, setEmbedKey] = useState(0)
   const [shouldPreload, setShouldPreload] = useState(false)
+  const { markModalOpen, markFirstImageDisplay, logPerformanceSummary } = useInstagramPerformance()
 
   // Force re-render on mount to ensure proper Instagram embed sizing
   useEffect(() => {
     // Start preloading immediately when modal opens
     setShouldPreload(true)
+    markModalOpen() // Track modal open time
     
     const timer = setTimeout(() => {
       setEmbedKey(prev => prev + 1)
     }, 50)
-    return () => clearTimeout(timer)
+    
+    // Mark first image display after a delay
+    const displayTimer = setTimeout(() => {
+      markFirstImageDisplay()
+    }, 500)
+    
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(displayTimer)
+    }
   }, [])
 
   // Load styles and motifs if not provided
@@ -150,6 +162,7 @@ export default function ArtistModal({ artist, onClose, availableStyles = [], ava
   const handleBackdropClick = (e: React.MouseEvent) => {
     // Only close if clicking on the backdrop, not the modal content
     if (e.target === e.currentTarget) {
+      logPerformanceSummary() // Log performance when modal closes
       onClose()
     }
   }

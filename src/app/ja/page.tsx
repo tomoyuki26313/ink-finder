@@ -16,6 +16,7 @@ import { getLocalizedField } from '@/lib/multilingual'
 import { StructuredData } from '@/components/SEO/StructuredData'
 import { useWebVitals, usePerformanceMonitor } from '@/hooks/usePerformance'
 import InstagramPreloader from '@/components/InstagramPreloader'
+import { performanceTracking } from '@/hooks/useInstagramPerformance'
 
 export default function Home() {
   const { t, language } = useLanguage()
@@ -27,6 +28,29 @@ export default function Home() {
   // Performance monitoring
   useWebVitals()
   const { markStart, markEnd } = usePerformanceMonitor()
+  
+  // Add performance summary button (development only)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      // Add keyboard shortcut for performance summary
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key === 'p' && e.metaKey) { // Cmd+P
+          e.preventDefault()
+          const metrics = performanceTracking.getMetrics()
+          console.group('📊 Instagram Performance Metrics')
+          console.log(`Preload Hit Rate: ${metrics.preloadHitRate.toFixed(1)}%`)
+          console.log(`Total Preloaded: ${metrics.totalPreloaded}`)
+          console.log(`Total Requested: ${metrics.totalRequested}`)
+          console.log(`Cache Hits: ${metrics.hits}`)
+          console.log(`Cache Misses: ${metrics.misses}`)
+          console.groupEnd()
+        }
+      }
+      
+      window.addEventListener('keydown', handleKeyPress)
+      return () => window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [])
   const [error, setError] = useState<string | null>(null)
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [selectedMotifs, setSelectedMotifs] = useState<string[]>([])

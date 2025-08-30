@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { performanceTracking } from '@/hooks/useInstagramPerformance'
 
 interface InstagramPreloaderProps {
   instagramUrls: string[]
@@ -54,6 +55,7 @@ export default function InstagramPreloader({ instagramUrls, aggressive = true, p
           await new Promise((resolve, reject) => {
             img.onload = () => {
               imageCache.set(postId, img)
+              performanceTracking.markImagePreloaded(url) // Track preload
               resolve(img)
             }
             img.onerror = () => reject()

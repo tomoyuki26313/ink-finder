@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Instagram } from 'lucide-react'
+import { performanceTracking } from '@/hooks/useInstagramPerformance'
 
 interface InstagramEmbedProps {
   postUrl: string
@@ -42,11 +43,16 @@ export default function InstagramEmbed({
 }: InstagramEmbedProps) {
   const embedRef = useRef<HTMLDivElement>(null)
   const [loaded, setLoaded] = useState(false)
+  const loadStartTime = useRef<number>(0)
 
   const embedId = getEmbedIdFromUrl(postUrl)
 
   useEffect(() => {
     let isComponentMounted = true
+    loadStartTime.current = performance.now()
+    
+    // Track that this image is being requested
+    performanceTracking.markImageRequested(postUrl)
 
     const processEmbed = () => {
       if (!isComponentMounted || !embedRef.current) return
@@ -57,6 +63,8 @@ export default function InstagramEmbed({
           window.instgrm.Embeds.process()
           if (isComponentMounted) {
             setLoaded(true)
+            const loadTime = performance.now() - loadStartTime.current
+            console.log(`⏱️ Instagram embed loaded: ${postUrl.substring(0, 50)}... in ${loadTime.toFixed(2)}ms`)
           }
         } catch (error) {
           console.warn('Instagram embed processing failed:', error)
